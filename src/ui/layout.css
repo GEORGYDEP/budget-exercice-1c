@@ -13,30 +13,41 @@
 .app-header {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: white;
-  padding: var(--space-xl) var(--space-lg);
-  text-align: center;
+  padding: var(--space-md) var(--space-lg);
   box-shadow: var(--shadow-md);
   position: sticky;
   top: 0;
   z-index: var(--z-header);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.app-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .app-header h1 {
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  margin-bottom: var(--space-sm);
+  margin: 0;
+  line-height: 1.2;
 }
 
 .app-header .subtitle {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-sm);
   opacity: 0.9;
-  margin-bottom: var(--space-lg);
+  margin: 0;
 }
 
 /* Progress indicator */
 .progress-indicator {
-  max-width: 600px;
-  margin: 0 auto;
+  flex: 1;
+  max-width: 500px;
+  min-width: 200px;
 }
 
 .progress-bar {
@@ -105,22 +116,53 @@
   font-size: var(--font-size-lg);
 }
 
+/* Layout pour la partie 1 (Doc Quiz) */
+.quiz-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+@media (min-width: 768px) {
+  .quiz-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.quiz-layout-left {
+  background: var(--color-background);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: calc(var(--space-xl) + 60px);
+}
+
+.quiz-layout-left h3 {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-md);
+  color: var(--color-text);
+}
+
+.quiz-layout-right {
+  background: var(--color-background);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  box-shadow: var(--shadow-md);
+}
+
 /* Layout pour la partie 2 (Budget Board) */
 .budget-layout {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-xl);
+  align-items: start;
 }
 
 @media (min-width: 768px) {
   .budget-layout {
-    grid-template-columns: 400px 1fr;
-  }
-}
-
-@media (min-width: 1200px) {
-  .budget-layout {
-    grid-template-columns: 450px 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -130,14 +172,40 @@
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   box-shadow: var(--shadow-md);
-  max-height: 80vh;
-  overflow-y: auto;
+  position: sticky;
+  top: calc(var(--space-xl) + 60px);
 }
 
 .documents-gallery h3 {
-  font-size: var(--font-size-xl);
-  margin-bottom: var(--space-lg);
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-md);
   color: var(--color-text);
+}
+
+.document-progress {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.document-preview-large {
+  margin-top: var(--space-md);
+}
+
+.document-preview-large img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: transform var(--transition-base);
+}
+
+.document-preview-large img:hover {
+  transform: scale(1.02);
 }
 
 .documents-grid {
@@ -310,12 +378,23 @@
 
 /* Responsive utilities */
 @media (max-width: 767px) {
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--space-sm) var(--space-md);
+  }
+
   .app-header h1 {
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-lg);
   }
 
   .app-header .subtitle {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-xs);
+  }
+
+  .progress-indicator {
+    width: 100%;
+    max-width: 100%;
   }
 
   .app-main {

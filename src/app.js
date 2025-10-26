@@ -80,6 +80,9 @@ export class App {
     // Partie 2: Budget Board
     this.budgetBoard = new BudgetBoard(document.getElementById('budget-board-container'));
     await this.budgetBoard.init();
+    this.budgetBoard.on('progress', (progressData) => {
+      this.updatePart2Progress(progressData);
+    });
     this.budgetBoard.on('complete', (score) => {
       this.scores.part2 = score;
       this.updateProgress();
@@ -258,10 +261,29 @@ export class App {
       this.scores.part2,
       this.scores.part3
     );
-    
+
     const scoreDisplay = document.getElementById('total-score');
     if (scoreDisplay) {
       scoreDisplay.textContent = totalScore;
+    }
+  }
+
+  updatePart2Progress(progressData) {
+    // Update progress bar to show document progression within Part 2
+    // Base progress is 33% (after Part 1), add up to 33% more based on document progress
+    const baseProgress = 33;
+    const part2Progress = (progressData.current / progressData.total) * 33;
+    const totalProgress = baseProgress + part2Progress;
+
+    const progressFill = document.querySelector('.progress-fill');
+    if (progressFill) {
+      progressFill.style.width = `${totalProgress}%`;
+    }
+
+    // Update text to show document progress
+    const currentPartText = document.querySelector('.current-part');
+    if (currentPartText) {
+      currentPartText.textContent = `Partie 2 - Document ${progressData.current}/${progressData.total}`;
     }
   }
 

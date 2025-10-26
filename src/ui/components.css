@@ -259,12 +259,13 @@
 .budget-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: var(--space-lg);
+  margin-top: var(--space-md);
+  font-size: var(--font-size-sm);
 }
 
 .budget-table th,
 .budget-table td {
-  padding: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   text-align: left;
   border-bottom: 1px solid var(--color-border);
 }
@@ -286,10 +287,11 @@
   background: var(--color-primary);
   color: white;
   font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
 }
 
 .budget-section-header td {
-  padding: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
 }
 
 .budget-row-label {
