@@ -30,8 +30,8 @@
     "id": "quittance-loyer",
     "titre": "Quittance de loyer",
     "type": "quittance_loyer",
-    "pagePDF": 2,
-    "imagePath": "assets/images/page_2.png",
+    "pagePDF": 3,
+    "imagePath": "assets/images/page_3_loyer.png",
     "montants": [
       746.0
     ],

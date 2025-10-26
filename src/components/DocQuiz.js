@@ -158,7 +158,7 @@ export class DocQuiz {
     const pageMap = {
       'assurance-voiture': 1,
       'restaurant': 2,
-      'quittance-loyer': 2,
+      'quittance-loyer': '3_loyer',
       'medecin': 3,
       'bus': 4,
       'proximus': 5,
@@ -178,9 +178,10 @@ export class DocQuiz {
       role: 'radio',
       'aria-checked': 'false',
       'aria-label': option,
+      'data-original-index': String(index),
       onclick: () => this.selectOption(index, question)
     }, option);
-    
+
     return optionElement;
   }
 
@@ -189,15 +190,17 @@ export class DocQuiz {
 
     // Désactiver toutes les options
     const options = this.container.querySelectorAll('.quiz-option');
-    options.forEach((opt, idx) => {
+    options.forEach((opt) => {
       opt.classList.add('disabled');
       opt.disabled = true;
 
-      if (idx === selectedIndex) {
+      const optionOriginalIndex = parseInt(opt.getAttribute('data-original-index'), 10);
+
+      if (optionOriginalIndex === selectedIndex) {
         opt.classList.add(isCorrect ? 'correct' : 'incorrect');
         opt.setAttribute('aria-checked', 'true');
       }
-      if (idx === question.correctIndex && !isCorrect) {
+      if (optionOriginalIndex === question.correctIndex && !isCorrect) {
         opt.classList.add('correct');
       }
     });
