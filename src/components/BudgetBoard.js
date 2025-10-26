@@ -30,7 +30,11 @@ export class BudgetBoard {
       const documentsData = await docsRes.json();
       this.documents = documentsData.map(doc => ({
         ...doc,
-        imagePath: doc.imagePath ? resolveAssetUrl(doc.imagePath) : null
+        imagePath: doc.imagePath
+          ? resolveAssetUrl(doc.imagePath)
+          : doc.pagePDF
+          ? resolveAssetUrl(`assets/images/page_${doc.pagePDF}.png`)
+          : null
       }));
       
       this.render();
@@ -244,6 +248,9 @@ export class BudgetBoard {
 
   handleDragOver(e) {
     e.preventDefault();
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = 'move';
+    }
     e.currentTarget.classList.add('drag-over');
   }
 
@@ -255,7 +262,8 @@ export class BudgetBoard {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
 
-    const amountValue = e.dataTransfer.getData('amount');
+    const amountValue =
+      e.dataTransfer.getData('amount') || e.dataTransfer.getData('text/plain');
     const amount = parseFloat(amountValue);
     const sourceRubrique = e.dataTransfer.getData('sourceRubrique');
     const sourceDocId = e.dataTransfer.getData('docId');
@@ -273,6 +281,7 @@ export class BudgetBoard {
       draggable: 'true',
       ondragstart: (ev) => {
         ev.dataTransfer.setData('amount', amount);
+        ev.dataTransfer.setData('text/plain', amount);
         ev.dataTransfer.setData('sourceRubrique', item.libelle);
         if (sourceDocId) {
           ev.dataTransfer.setData('docId', sourceDocId);
@@ -346,7 +355,9 @@ export class BudgetBoard {
   }
 
   handleAmountDragStart(event, montant, doc) {
+    event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('amount', montant);
+    event.dataTransfer.setData('text/plain', montant);
     event.dataTransfer.setData('docId', doc.id);
   }
 
@@ -373,6 +384,7 @@ export class BudgetBoard {
           };
 
       dataTransfer.setData('amount', montant);
+      dataTransfer.setData('text/plain', montant);
       dataTransfer.setData('docId', doc.id);
 
       this.handleDrop({
