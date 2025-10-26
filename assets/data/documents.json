@@ -1,0 +1,158 @@
+[
+  {
+    "id": "assurance-voiture",
+    "titre": "Avis d'échéance assurance voiture",
+    "type": "quittance_assurance",
+    "pagePDF": 1,
+    "imagePath": "assets/images/page_1.png",
+    "montants": [
+      35.28
+    ],
+    "libelles": [
+      "Assurance voiture Ford Fiesta",
+      "Responsabilité civile + Providis"
+    ]
+  },
+  {
+    "id": "restaurant",
+    "titre": "Souche TVA restaurant",
+    "type": "ticket_restaurant",
+    "pagePDF": 2,
+    "imagePath": "assets/images/page_2.png",
+    "montants": [
+      50.0
+    ],
+    "libelles": [
+      "Restaurant BVBA AULNENHOF"
+    ]
+  },
+  {
+    "id": "quittance-loyer",
+    "titre": "Quittance de loyer",
+    "type": "quittance_loyer",
+    "pagePDF": 2,
+    "imagePath": "assets/images/page_2.png",
+    "montants": [
+      746.0
+    ],
+    "libelles": [
+      "Loyer appartement septembre"
+    ]
+  },
+  {
+    "id": "medecin",
+    "titre": "Attestation de soins",
+    "type": "attestation_soins",
+    "pagePDF": 3,
+    "imagePath": "assets/images/page_3.png",
+    "montants": [
+      28.25
+    ],
+    "libelles": [
+      "Médecin générale - Dr. Lumen Marcelle"
+    ]
+  },
+  {
+    "id": "bus",
+    "titre": "Abonnement bus",
+    "type": "carte_transport",
+    "pagePDF": 4,
+    "imagePath": "assets/images/page_4.png",
+    "montants": [
+      48.5
+    ],
+    "libelles": [
+      "Carte train 2e classe Liège-Hannut"
+    ]
+  },
+  {
+    "id": "proximus",
+    "titre": "Facture Proximus",
+    "type": "facture_telephone",
+    "pagePDF": 5,
+    "imagePath": "assets/images/page_5.png",
+    "montants": [
+      69.18
+    ],
+    "libelles": [
+      "Abonnement et communications téléphone"
+    ]
+  },
+  {
+    "id": "ikea",
+    "titre": "Ticket de caisse IKEA",
+    "type": "ticket_caisse",
+    "pagePDF": 6,
+    "imagePath": "assets/images/page_6.png",
+    "montants": [
+      35.5
+    ],
+    "libelles": [
+      "Meuble TV et vase"
+    ]
+  },
+  {
+    "id": "extrait-bancaire",
+    "titre": "Extrait bancaire",
+    "type": "extrait_compte",
+    "pagePDF": 7,
+    "imagePath": "assets/images/page_7.png",
+    "montants": [
+      352.52,
+      2.3,
+      61.76
+    ],
+    "libelles": [
+      "Virement salaire",
+      "Frais de gestion",
+      "Luminus électricité"
+    ]
+  },
+  {
+    "id": "papeterie",
+    "titre": "Facture papeterie",
+    "type": "facture",
+    "pagePDF": 8,
+    "imagePath": "assets/images/page_8.png",
+    "montants": [
+      57.27
+    ],
+    "libelles": [
+      "Maximum SA - fournitures de bureau"
+    ]
+  },
+  {
+    "id": "visa",
+    "titre": "État des dépenses VISA",
+    "type": "releve_carte",
+    "pagePDF": 9,
+    "imagePath": "assets/images/page_9.png",
+    "montants": [
+      12.0,
+      20.0,
+      18.0,
+      52.5,
+      168.0
+    ],
+    "libelles": [
+      "Minimode",
+      "Quick",
+      "H&M",
+      "Essence",
+      "Carrefour alimentation"
+    ]
+  },
+  {
+    "id": "carrefour",
+    "titre": "Ticket de caisse Carrefour",
+    "type": "ticket_supermarche",
+    "pagePDF": 10,
+    "imagePath": "assets/images/page_10.png",
+    "montants": [
+      345.46
+    ],
+    "libelles": [
+      "Courses alimentaires détaillées"
+    ]
+  }
+]
