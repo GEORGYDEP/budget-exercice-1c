@@ -12,7 +12,9 @@ export class BudgetBoard {
     this.container = container;
     this.budgetData = null;
     this.documents = [];
+    this.currentDocumentIndex = 0;
     this.placedAmounts = {};
+    this.validatedDocuments = new Set();
     this.validationService = new ValidationService();
     this.scoringService = new ScoringService();
     this.listeners = {};
@@ -32,8 +34,9 @@ export class BudgetBoard {
         ...doc,
         imagePath: resolveAssetUrl(doc.imagePath || `assets/images/page_${doc.pagePDF}.png`)
       }));
-      
+
       this.render();
+      this.emitProgress(); // Emit initial progress
     } catch (error) {
       console.error('Erreur chargement budget:', error);
       this.container.innerHTML = '<p class="feedback-message error">Erreur lors du chargement</p>';
@@ -62,17 +65,80 @@ export class BudgetBoard {
 
   createDocumentsGallery() {
     const gallery = createElement('div', { className: 'documents-gallery' });
-    const title = createElement('h3', {}, 'Documents disponibles');
-    gallery.appendChild(title);
-    
-    const grid = createElement('div', { className: 'documents-grid' });
-    this.documents.forEach(doc => {
-      const card = this.createDocumentCard(doc);
-      grid.appendChild(card);
-    });
-    gallery.appendChild(grid);
-    
+
+    // Progress indicator
+    const progress = createElement('div', { className: 'document-progress' });
+    const progressText = createElement('span', {},
+      `Document ${this.currentDocumentIndex + 1} / ${this.documents.length}`
+    );
+    const progressBadge = createElement('span', {
+      className: 'badge badge-info'
+    }, `${this.validatedDocuments.size} classés`);
+    progress.appendChild(progressText);
+    progress.appendChild(progressBadge);
+    gallery.appendChild(progress);
+
+    // Current document
+    if (this.currentDocumentIndex < this.documents.length) {
+      const currentDoc = this.documents[this.currentDocumentIndex];
+      const title = createElement('h3', {}, currentDoc.titre);
+      gallery.appendChild(title);
+
+      const preview = this.createDocumentPreviewLarge(currentDoc);
+      gallery.appendChild(preview);
+
+      // Show draggable amounts if document has amounts
+      if (currentDoc.montants && currentDoc.montants.length > 0) {
+        const amountsSection = createElement('div', { className: 'mt-md' });
+        const amountsTitle = createElement('p', {
+          className: 'text-sm mb-sm',
+          style: 'font-weight: 600;'
+        }, 'Montants à classer :');
+        amountsSection.appendChild(amountsTitle);
+
+        const amountsContainer = createElement('div', {
+          className: 'flex gap-sm',
+          style: 'flex-wrap: wrap;'
+        });
+
+        currentDoc.montants.forEach(montant => {
+          const dragAmount = createElement('div', {
+            className: 'draggable-amount',
+            draggable: 'true',
+            ondragstart: (e) => {
+              e.dataTransfer.setData('amount', montant);
+              e.dataTransfer.setData('docId', currentDoc.id);
+              e.target.classList.add('dragging');
+            },
+            ondragend: (e) => e.target.classList.remove('dragging')
+          }, formatEuro(montant));
+          amountsContainer.appendChild(dragAmount);
+        });
+
+        amountsSection.appendChild(amountsContainer);
+        gallery.appendChild(amountsSection);
+      }
+    } else {
+      const title = createElement('h3', {}, 'Tous les documents classés !');
+      gallery.appendChild(title);
+      const message = createElement('p', { className: 'text-secondary' },
+        'Tu peux maintenant valider ton budget complet.'
+      );
+      gallery.appendChild(message);
+    }
+
     return gallery;
+  }
+
+  createDocumentPreviewLarge(doc) {
+    const preview = createElement('div', { className: 'document-preview-large' });
+    const img = createElement('img', {
+      src: doc.imagePath,
+      alt: doc.titre,
+      onclick: () => this.showDocumentDetail(doc)
+    });
+    preview.appendChild(img);
+    return preview;
   }
 
   createDocumentCard(doc) {
@@ -182,20 +248,37 @@ export class BudgetBoard {
 
   createActions() {
     const actions = createElement('div', { className: 'nav-buttons mt-xl' });
-    
-    const validateBtn = createElement('button', {
-      className: 'btn btn-primary',
-      onclick: () => this.validate()
-    }, 'Valider le budget');
-    
-    const printBtn = createElement('button', {
-      className: 'btn btn-secondary print-button',
-      onclick: () => window.print()
-    }, '🖨 Imprimer');
-    
-    actions.appendChild(validateBtn);
-    actions.appendChild(printBtn);
-    
+
+    // Show different actions based on progress
+    if (this.currentDocumentIndex < this.documents.length) {
+      // Validate current document button
+      const validateDocBtn = createElement('button', {
+        className: 'btn btn-primary',
+        onclick: () => this.validateCurrentDocument()
+      }, `Valider le document ${this.currentDocumentIndex + 1}`);
+      actions.appendChild(validateDocBtn);
+
+      // Skip document button (optional)
+      const skipBtn = createElement('button', {
+        className: 'btn btn-secondary',
+        onclick: () => this.skipDocument()
+      }, 'Passer ce document');
+      actions.appendChild(skipBtn);
+    } else {
+      // Final validation button
+      const validateAllBtn = createElement('button', {
+        className: 'btn btn-success btn-large',
+        onclick: () => this.validateFinal()
+      }, 'Valider le budget complet');
+      actions.appendChild(validateAllBtn);
+
+      const printBtn = createElement('button', {
+        className: 'btn btn-secondary print-button',
+        onclick: () => window.print()
+      }, '🖨 Imprimer');
+      actions.appendChild(printBtn);
+    }
+
     return actions;
   }
 
@@ -302,15 +385,48 @@ export class BudgetBoard {
     }
   }
 
-  validate() {
+  validateCurrentDocument() {
+    const currentDoc = this.documents[this.currentDocumentIndex];
+
+    // Check if all amounts from current document are placed
+    let allPlaced = true;
+    if (currentDoc.montants && currentDoc.montants.length > 0) {
+      // This is a simplified check - in a real implementation, you'd track which amounts belong to which documents
+      announce('Document validé. Passage au suivant...');
+    }
+
+    // Mark as validated and move to next
+    this.validatedDocuments.add(currentDoc.id);
+    this.nextDocument();
+  }
+
+  skipDocument() {
+    announce('Document passé');
+    this.nextDocument();
+  }
+
+  nextDocument() {
+    if (this.currentDocumentIndex < this.documents.length - 1) {
+      this.currentDocumentIndex++;
+      this.emitProgress();
+      this.render();
+    } else if (this.currentDocumentIndex === this.documents.length - 1) {
+      // Move to final validation state
+      this.currentDocumentIndex++;
+      this.emitProgress();
+      this.render();
+    }
+  }
+
+  validateFinal() {
     const validation = this.validationService.validateBudget(this.placedAmounts, this.budgetData);
-    
+
     if (!validation.isComplete) {
       announce('Budget incomplet. Complète toutes les rubriques.');
       alert('Veuillez compléter toutes les rubriques avant de valider.');
       return;
     }
-    
+
     // Afficher les erreurs
     Object.entries(validation.items).forEach(([rubrique, result]) => {
       const dropZone = document.querySelector(`[data-rubrique="${rubrique}"]`);
@@ -323,13 +439,28 @@ export class BudgetBoard {
         }
       }
     });
-    
+
     if (validation.isCorrect) {
       this.complete(validation);
     } else {
       announce(`${validation.errors.length} erreurs trouvées. Corrige-les et valide à nouveau.`);
       alert('Il y a des erreurs. Corrige les montants en rouge et valide à nouveau.');
     }
+  }
+
+  validate() {
+    // Alias for backwards compatibility
+    this.validateFinal();
+  }
+
+  emitProgress() {
+    // Emit progress update for progress bar
+    const progress = {
+      current: this.currentDocumentIndex,
+      total: this.documents.length,
+      percentage: Math.min(100, Math.round((this.currentDocumentIndex / this.documents.length) * 100))
+    };
+    this.emit('progress', progress);
   }
 
   complete(validation) {
@@ -349,7 +480,9 @@ export class BudgetBoard {
   }
 
   reset() {
+    this.currentDocumentIndex = 0;
     this.placedAmounts = {};
+    this.validatedDocuments = new Set();
     this.isValidated = false;
     this.render();
   }

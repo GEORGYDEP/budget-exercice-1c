@@ -40,36 +40,84 @@ export class DocQuiz {
     }
 
     const question = this.questions[this.currentQuestion];
-    
+
     this.container.innerHTML = '';
-    const questionCard = this.createQuestionCard(question);
-    this.container.appendChild(questionCard);
+    const layout = this.createQuizLayout(question);
+    this.container.appendChild(layout);
+  }
+
+  createQuizLayout(question) {
+    const layout = createElement('div', { className: 'quiz-layout' });
+
+    // Left column: Document preview
+    const leftCol = createElement('div', { className: 'quiz-layout-left' });
+    const docTitle = createElement('h3', {}, question.question);
+    leftCol.appendChild(docTitle);
+
+    if (question.docId) {
+      const preview = this.createDocumentPreview(question.docId);
+      leftCol.appendChild(preview);
+    }
+
+    layout.appendChild(leftCol);
+
+    // Right column: Question and options
+    const rightCol = createElement('div', { className: 'quiz-layout-right', role: 'group', 'aria-labelledby': `question-${question.id}` });
+
+    // Question number header
+    const header = createElement('div', { className: 'quiz-question-header' });
+    const questionNumber = createElement('span', { className: 'quiz-question-number' },
+      `Question ${this.currentQuestion + 1}/${this.questions.length}`
+    );
+    header.appendChild(questionNumber);
+    rightCol.appendChild(header);
+
+    // Question text
+    const questionText = createElement('h3', {
+      className: 'quiz-question-text',
+      id: `question-${question.id}`
+    }, 'De quel document s\'agit-il ?');
+    rightCol.appendChild(questionText);
+
+    // Options
+    const optionsContainer = createElement('div', { className: 'quiz-options', role: 'radiogroup' });
+    question.options.forEach((option, index) => {
+      const optionElement = this.createOption(option, index, question);
+      optionsContainer.appendChild(optionElement);
+    });
+    rightCol.appendChild(optionsContainer);
+
+    layout.appendChild(rightCol);
+
+    return layout;
   }
 
   createQuestionCard(question) {
+    // Deprecated - replaced by createQuizLayout
+    // Kept for backwards compatibility if needed
     const card = createElement('div', { className: 'quiz-question', role: 'group', 'aria-labelledby': `question-${question.id}` });
-    
+
     // Header
     const header = createElement('div', { className: 'quiz-question-header' });
-    const questionNumber = createElement('span', { className: 'quiz-question-number' }, 
+    const questionNumber = createElement('span', { className: 'quiz-question-number' },
       `Question ${this.currentQuestion + 1}/${this.questions.length}`
     );
     header.appendChild(questionNumber);
     card.appendChild(header);
-    
+
     // Question text
-    const questionText = createElement('h3', { 
+    const questionText = createElement('h3', {
       className: 'quiz-question-text',
       id: `question-${question.id}`
     }, question.question);
     card.appendChild(questionText);
-    
+
     // Document preview
     if (question.docId) {
       const preview = this.createDocumentPreview(question.docId);
       card.appendChild(preview);
     }
-    
+
     // Options
     const optionsContainer = createElement('div', { className: 'quiz-options', role: 'radiogroup' });
     question.options.forEach((option, index) => {
@@ -77,7 +125,7 @@ export class DocQuiz {
       optionsContainer.appendChild(optionElement);
     });
     card.appendChild(optionsContainer);
-    
+
     return card;
   }
 
@@ -135,13 +183,13 @@ export class DocQuiz {
 
   async selectOption(selectedIndex, question) {
     const isCorrect = selectedIndex === question.correctIndex;
-    
+
     // Désactiver toutes les options
     const options = this.container.querySelectorAll('.quiz-option');
     options.forEach((opt, idx) => {
       opt.classList.add('disabled');
       opt.disabled = true;
-      
+
       if (idx === selectedIndex) {
         opt.classList.add(isCorrect ? 'correct' : 'incorrect');
         opt.setAttribute('aria-checked', 'true');
@@ -150,22 +198,22 @@ export class DocQuiz {
         opt.classList.add('correct');
       }
     });
-    
+
     // Feedback
     const feedback = this.createFeedback(isCorrect, question.explication);
-    const questionCard = this.container.querySelector('.quiz-question');
-    questionCard.appendChild(feedback);
-    
+    const rightCol = this.container.querySelector('.quiz-layout-right') || this.container.querySelector('.quiz-question');
+    rightCol.appendChild(feedback);
+
     // Enregistrer la réponse
     this.answers.push({
       questionId: question.id,
       selectedIndex,
       isCorrect
     });
-    
+
     // Annoncer le résultat
     announce(isCorrect ? 'Bonne réponse' : 'Mauvaise réponse');
-    
+
     // Passer à la question suivante après un délai
     await wait(2000);
     this.currentQuestion++;
