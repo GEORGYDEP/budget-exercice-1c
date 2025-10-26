@@ -5,6 +5,7 @@
 import { createElement, formatEuro, announce, wait } from '../utils/dom.js';
 import { t } from '../utils/i18n.js';
 import { ScoringService } from '../services/scoring.js';
+import { resolveAssetUrl } from '../utils/assets.js';
 
 export class DocQuiz {
   constructor(container) {
@@ -20,7 +21,7 @@ export class DocQuiz {
   async init() {
     try {
       // Charger les données du quiz
-      const response = await fetch('./assets/data/quiz.json');
+      const response = await fetch(resolveAssetUrl('assets/data/quiz.json'));
       const quizData = await response.json();
       this.questions = quizData.partie1_documents;
       
@@ -83,7 +84,7 @@ export class DocQuiz {
   createDocumentPreview(docId) {
     const preview = createElement('div', { className: 'quiz-document-preview' });
     const img = createElement('img', {
-      src: `./assets/images/page_${this.getPageNumber(docId)}.png`,
+      src: resolveAssetUrl(`assets/images/page_${this.getPageNumber(docId)}.png`),
       alt: `Document ${docId}`,
       role: 'img',
       tabindex: '0',

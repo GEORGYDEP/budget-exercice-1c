@@ -128,19 +128,7 @@ budget-menage-jeu/
 ├── public/
 │   ├── index.html                    # Point d'entrée HTML
 │   └── assets/
-│       ├── images/                   # Images extraites du PDF (12 pages)
-│       │   ├── page_1.png           # Assurance voiture
-│       │   ├── page_2.png           # Restaurant + Quittance loyer
-│       │   ├── page_3.png           # Attestation soins
-│       │   ├── page_4.png           # Abonnement bus
-│       │   ├── page_5.png           # Facture Proximus
-│       │   ├── page_6.png           # Ticket IKEA
-│       │   ├── page_7.png           # Extrait bancaire
-│       │   ├── page_8.png           # Facture papeterie
-│       │   ├── page_9.png           # État VISA
-│       │   ├── page_10.png          # Ticket Carrefour
-│       │   ├── page_11.png          # Tableau budget
-│       │   └── page_12.png          # Questions finales
+│       ├── images/                   # Images extraites du PDF (à téléverser manuellement)
 │       └── data/
 │           ├── documents.json        # Métadonnées des 11 documents
 │           ├── budget.json           # Rubriques et montants attendus
@@ -177,6 +165,42 @@ budget-menage-jeu/
 ├── LICENSE                           # MIT
 └── README.md                         # Ce fichier
 ```
+
+## 🖼️ Ajout des images du scénario
+
+Les fichiers PNG des documents originaux ne sont pas inclus dans ce dépôt afin d'éviter le téléversement de binaires depuis l'interface d'OpenAI.
+
+Pour que l'application fonctionne correctement sur GitHub Pages, téléversez manuellement les 12 images extraites du PDF dans les deux emplacements suivants :
+
+1. `public/assets/images/`
+2. `assets/images/`
+
+Chaque dossier doit contenir les fichiers nommés :
+
+```
+page_1.png
+page_2.png
+page_3.png
+page_4.png
+page_5.png
+page_6.png
+page_7.png
+page_8.png
+page_9.png
+page_10.png
+page_11.png
+page_12.png
+```
+
+### Téléversement via l'interface GitHub
+
+1. Ouvrez votre dépôt sur github.com.
+2. Naviguez dans le dossier cible (`public/assets/images/` puis `assets/images/`).
+3. Cliquez sur **Add file** → **Upload files**.
+4. Glissez-déposez ou sélectionnez les fichiers `page_*.png` correspondants.
+5. Validez en créant un commit directement sur la branche principale (ou via une pull request si nécessaire).
+
+Les images seront ensuite servies automatiquement par Vite lors du développement et par GitHub Pages en production.
 
 ## 📊 Données sources
 

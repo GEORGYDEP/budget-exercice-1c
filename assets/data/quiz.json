@@ -1,0 +1,196 @@
+{
+  "partie1_documents": [
+    {
+      "id": "q1",
+      "question": "De quel document s'agit-il ?",
+      "docId": "assurance-voiture",
+      "options": [
+        "Une quittance d'assurance automobile",
+        "Une facture de garage",
+        "Un contrat de location",
+        "Une attestation d'achat"
+      ],
+      "correctIndex": 0,
+      "explication": "C'est un avis d'échéance/quittance d'assurance auto (responsabilité civile + assistance)"
+    },
+    {
+      "id": "q2",
+      "question": "De quel document s'agit-il ?",
+      "docId": "restaurant",
+      "options": [
+        "Un ticket de caisse",
+        "Une souche TVA de restaurant",
+        "Une facture détaillée",
+        "Un bon de réduction"
+      ],
+      "correctIndex": 1,
+      "explication": "C'est une souche TVA d'un restaurant"
+    },
+    {
+      "id": "q3",
+      "question": "De quel document s'agit-il ?",
+      "docId": "quittance-loyer",
+      "options": [
+        "Un contrat de bail",
+        "Une facture d'électricité",
+        "Une quittance de loyer",
+        "Un avis d'échéance"
+      ],
+      "correctIndex": 2,
+      "explication": "C'est une quittance, remise lors du paiement du loyer en liquide (de moins en moins courant)"
+    },
+    {
+      "id": "q4",
+      "question": "De quel document s'agit-il ?",
+      "docId": "medecin",
+      "options": [
+        "Une ordonnance médicale",
+        "Une attestation de soins",
+        "Une facture d'hôpital",
+        "Un certificat médical"
+      ],
+      "correctIndex": 1,
+      "explication": "C'est une attestation de soins remise par un médecin afin d'obtenir le remboursement à la mutuelle d'une partie de ses honoraires"
+    },
+    {
+      "id": "q5",
+      "question": "De quel document s'agit-il ?",
+      "docId": "bus",
+      "options": [
+        "Un ticket de bus simple",
+        "Un abonnement de transport mensuel",
+        "Une carte de réduction",
+        "Un billet de train"
+      ],
+      "correctIndex": 1,
+      "explication": "C'est un abonnement de bus pour le mois de septembre"
+    },
+    {
+      "id": "q6",
+      "question": "De quel document s'agit-il ?",
+      "docId": "proximus",
+      "options": [
+        "Un contrat téléphonique",
+        "Une facture de téléphone",
+        "Un bon de commande",
+        "Une publicité"
+      ],
+      "correctIndex": 1,
+      "explication": "C'est une facture de Proximus pour le téléphone"
+    },
+    {
+      "id": "q7",
+      "question": "De quel document s'agit-il ?",
+      "docId": "ikea",
+      "options": [
+        "Une facture avec TVA",
+        "Un ticket de caisse (preuve d'achat)",
+        "Un bon de livraison",
+        "Un devis"
+      ],
+      "correctIndex": 1,
+      "explication": "C'est un ticket de caisse pour achat (preuve d'achat)"
+    },
+    {
+      "id": "q8",
+      "question": "De quel document s'agit-il ?",
+      "docId": "extrait-bancaire",
+      "options": [
+        "Un relevé de carte bancaire",
+        "Un extrait de compte bancaire",
+        "Une demande de crédit",
+        "Un virement"
+      ],
+      "correctIndex": 1,
+      "explication": "C'est un extrait bancaire papier – permet de voir les différentes transactions entrées et sorties"
+    },
+    {
+      "id": "q9",
+      "question": "Quelle est la différence entre une facture et un ticket de caisse ?",
+      "docId": "papeterie",
+      "options": [
+        "Il n'y a pas de différence",
+        "La facture est plus chère",
+        "La facture permet aux entreprises de récupérer la TVA",
+        "Le ticket est obligatoire"
+      ],
+      "correctIndex": 2,
+      "explication": "La facture permet aux entreprises de récupérer la TVA, contrairement au simple ticket de caisse"
+    },
+    {
+      "id": "q10",
+      "question": "De quel document s'agit-il ?",
+      "docId": "visa",
+      "options": [
+        "Un relevé bancaire",
+        "Un état des dépenses de carte VISA",
+        "Une demande de carte",
+        "Un contrat d'assurance"
+      ],
+      "correctIndex": 1,
+      "explication": "C'est un état de dépense d'une carte VISA"
+    }
+  ],
+  "partie3_final": [
+    {
+      "id": "f1",
+      "question": "Le budget de Monsieur et Madame Thirion est-il équilibré ?",
+      "options": [
+        "Non, ils sont en déficit",
+        "Oui, leur budget est équilibré (positif)",
+        "Non, ils dépensent exactement ce qu'ils gagnent",
+        "Impossible à déterminer"
+      ],
+      "correctIndex": 1,
+      "explication": "Oui, leur budget de septembre est positif car leurs entrées (2102,52€) sont supérieures à leurs sorties (1750€)"
+    },
+    {
+      "id": "f2",
+      "question": "Monsieur et Madame Thirion peuvent-ils économiser ce mois-ci ?",
+      "options": [
+        "Non, ils ne peuvent pas économiser",
+        "Oui, ils peuvent économiser 352,52€",
+        "Oui, mais seulement 100€",
+        "Non, ils sont en déficit"
+      ],
+      "correctIndex": 1,
+      "explication": "Oui, ils peuvent économiser 352,52€ (différence entre entrées et sorties)"
+    },
+    {
+      "id": "f3",
+      "question": "Quelle proportion représente l'épargne par rapport aux ressources ?",
+      "options": [
+        "Environ 1/3 des ressources",
+        "Environ 1/5 des ressources (17%)",
+        "La moitié des ressources",
+        "Environ 1/10 des ressources"
+      ],
+      "correctIndex": 1,
+      "explication": "L'épargne représente environ 1/5 des ressources, soit 17% (352,52€ / 2102,52€)"
+    },
+    {
+      "id": "f4",
+      "question": "Comment nomme-t-on précisément le revenu de Julie ?",
+      "options": [
+        "Un salaire",
+        "Une pension",
+        "Des allocations de chômage",
+        "Une allocation familiale"
+      ],
+      "correctIndex": 2,
+      "explication": "Le revenu de Julie s'appelle des allocations de chômage"
+    },
+    {
+      "id": "f5",
+      "question": "Pourquoi ce ménage n'a-t-il pas d'allocations familiales dans ses entrées ?",
+      "options": [
+        "Ils ont oublié de les demander",
+        "Ils gagnent trop d'argent",
+        "Ils n'ont pas encore d'enfant",
+        "Ils ne sont pas mariés"
+      ],
+      "correctIndex": 2,
+      "explication": "Ils n'ont pas d'allocations familiales car ils n'ont pas encore d'enfant"
+    }
+  ]
+}

@@ -3,6 +3,7 @@
  */
 import { createElement, announce, wait } from '../utils/dom.js';
 import { ScoringService } from '../services/scoring.js';
+import { resolveAssetUrl } from '../utils/assets.js';
 
 export class FinalQuiz {
   constructor(container) {
@@ -16,7 +17,7 @@ export class FinalQuiz {
 
   async init() {
     try {
-      const response = await fetch('./assets/data/quiz.json');
+      const response = await fetch(resolveAssetUrl('assets/data/quiz.json'));
       const quizData = await response.json();
       this.questions = quizData.partie3_final;
       this.render();

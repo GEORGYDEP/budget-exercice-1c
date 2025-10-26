@@ -5,6 +5,7 @@
 import { createElement, formatEuro, announce } from '../utils/dom.js';
 import { ValidationService } from '../services/validation.js';
 import { ScoringService } from '../services/scoring.js';
+import { resolveAssetUrl } from '../utils/assets.js';
 
 export class BudgetBoard {
   constructor(container) {
@@ -21,12 +22,16 @@ export class BudgetBoard {
   async init() {
     try {
       const [budgetRes, docsRes] = await Promise.all([
-        fetch('./assets/data/budget.json'),
-        fetch('./assets/data/documents.json')
+        fetch(resolveAssetUrl('assets/data/budget.json')),
+        fetch(resolveAssetUrl('assets/data/documents.json'))
       ]);
-      
+
       this.budgetData = await budgetRes.json();
-      this.documents = await docsRes.json();
+      const documentsData = await docsRes.json();
+      this.documents = documentsData.map(doc => ({
+        ...doc,
+        imagePath: resolveAssetUrl(doc.imagePath || `assets/images/page_${doc.pagePDF}.png`)
+      }));
       
       this.render();
     } catch (error) {
