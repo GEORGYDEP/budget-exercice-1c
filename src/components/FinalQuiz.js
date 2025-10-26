@@ -1,7 +1,7 @@
 /**
  * Composant Quiz Final - Partie 3
  */
-import { createElement, announce, wait } from '../utils/dom.js';
+import { createElement, announce, wait, shuffle } from '../utils/dom.js';
 import { ScoringService } from '../services/scoring.js';
 import { resolveAssetUrl } from '../utils/assets.js';
 
@@ -41,25 +41,29 @@ export class FinalQuiz {
 
   createQuestionCard(question) {
     const card = createElement('div', { className: 'quiz-question' });
-    
+
     const header = createElement('div', { className: 'quiz-question-header' });
     header.appendChild(createElement('span', { className: 'quiz-question-number' },
       `Question ${this.currentQuestion + 1}/${this.questions.length}`
     ));
     card.appendChild(header);
-    
+
     card.appendChild(createElement('h3', { className: 'quiz-question-text' }, question.question));
-    
+
+    // Mélanger l'ordre des réponses
+    const indexedOptions = question.options.map((option, index) => ({ option, originalIndex: index }));
+    const shuffledOptions = shuffle(indexedOptions);
+
     const optionsContainer = createElement('div', { className: 'quiz-options' });
-    question.options.forEach((option, index) => {
+    shuffledOptions.forEach((item) => {
       const optionElement = createElement('button', {
         className: 'quiz-option',
-        onclick: () => this.selectOption(index, question)
-      }, option);
+        onclick: () => this.selectOption(item.originalIndex, question)
+      }, item.option);
       optionsContainer.appendChild(optionElement);
     });
     card.appendChild(optionsContainer);
-    
+
     return card;
   }
 

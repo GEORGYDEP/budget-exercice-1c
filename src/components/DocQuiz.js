@@ -2,7 +2,7 @@
  * Composant Quiz Documents - Partie 1
  * Affiche les documents et demande à l'utilisateur de les identifier
  */
-import { createElement, formatEuro, announce, wait } from '../utils/dom.js';
+import { createElement, formatEuro, announce, wait, shuffle } from '../utils/dom.js';
 import { t } from '../utils/i18n.js';
 import { ScoringService } from '../services/scoring.js';
 import { resolveAssetUrl } from '../utils/assets.js';
@@ -79,10 +79,13 @@ export class DocQuiz {
     }, 'De quel document s\'agit-il ?');
     rightCol.appendChild(questionText);
 
-    // Options
+    // Options - mélanger l'ordre des réponses
+    const indexedOptions = question.options.map((option, index) => ({ option, originalIndex: index }));
+    const shuffledOptions = shuffle(indexedOptions);
+
     const optionsContainer = createElement('div', { className: 'quiz-options', role: 'radiogroup' });
-    question.options.forEach((option, index) => {
-      const optionElement = this.createOption(option, index, question);
+    shuffledOptions.forEach((item, displayIndex) => {
+      const optionElement = this.createOption(item.option, item.originalIndex, question);
       optionsContainer.appendChild(optionElement);
     });
     rightCol.appendChild(optionsContainer);

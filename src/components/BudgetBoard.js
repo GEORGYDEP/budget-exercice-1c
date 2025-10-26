@@ -19,6 +19,7 @@ export class BudgetBoard {
     this.scoringService = new ScoringService();
     this.listeners = {};
     this.isValidated = false;
+    this.availableAmounts = []; // Track available amounts in the center zone
   }
 
   async init() {
@@ -51,6 +52,10 @@ export class BudgetBoard {
     // Galerie de documents (gauche)
     const gallery = this.createDocumentsGallery();
     layout.appendChild(gallery);
+
+    // Zone des montants (centre)
+    const amountsZone = this.createAmountsZone();
+    layout.appendChild(amountsZone);
 
     // Tableau de budget (droite)
     const budgetTable = this.createBudgetTable();
@@ -90,36 +95,11 @@ export class BudgetBoard {
       const preview = this.createDocumentPreviewLarge(currentDoc);
       gallery.appendChild(preview);
 
-      // Show draggable amounts if document has amounts
+      // Update available amounts for the center zone
       if (currentDoc.montants && currentDoc.montants.length > 0) {
-        const amountsSection = createElement('div', { className: 'mt-sm' });
-        const amountsTitle = createElement('p', {
-          className: 'text-sm mb-sm',
-          style: 'font-weight: 600; color: var(--color-primary);'
-        }, 'Montants à classer :');
-        amountsSection.appendChild(amountsTitle);
-
-        const amountsContainer = createElement('div', {
-          className: 'flex gap-sm',
-          style: 'flex-wrap: wrap; align-items: center;'
-        });
-
-        currentDoc.montants.forEach(montant => {
-          const dragAmount = createElement('div', {
-            className: 'draggable-amount',
-            draggable: 'true',
-            ondragstart: (e) => {
-              e.dataTransfer.setData('amount', String(montant));
-              e.dataTransfer.setData('docId', currentDoc.id);
-              e.target.classList.add('dragging');
-            },
-            ondragend: (e) => e.target.classList.remove('dragging')
-          }, formatEuro(montant));
-          amountsContainer.appendChild(dragAmount);
-        });
-
-        amountsSection.appendChild(amountsContainer);
-        gallery.appendChild(amountsSection);
+        this.availableAmounts = [...currentDoc.montants];
+      } else {
+        this.availableAmounts = [];
       }
     } else {
       const title = createElement('h3', {}, 'Tous les documents classés !');
@@ -128,6 +108,7 @@ export class BudgetBoard {
         'Tu peux maintenant valider ton budget complet.'
       );
       gallery.appendChild(message);
+      this.availableAmounts = [];
     }
 
     return gallery;
@@ -137,11 +118,69 @@ export class BudgetBoard {
     const preview = createElement('div', { className: 'document-preview-large' });
     const img = createElement('img', {
       src: doc.imagePath,
-      alt: doc.titre,
-      onclick: () => this.showDocumentDetail(doc)
+      alt: doc.titre
     });
     preview.appendChild(img);
     return preview;
+  }
+
+  createAmountsZone() {
+    const zone = createElement('div', { className: 'amounts-zone' });
+
+    const title = createElement('h3', {}, 'Montants à placer');
+    zone.appendChild(title);
+
+    const amountsContainer = createElement('div', {
+      className: 'amounts-container',
+      id: 'amounts-container'
+    });
+
+    // Display available amounts
+    this.availableAmounts.forEach((montant, index) => {
+      const dragAmount = createElement('div', {
+        className: 'draggable-amount',
+        draggable: 'true',
+        dataset: {
+          amount: String(montant),
+          amountIndex: String(index)
+        },
+        ondragstart: (e) => {
+          e.dataTransfer.setData('amount', String(montant));
+          e.dataTransfer.setData('amountIndex', String(index));
+          e.target.classList.add('dragging');
+        },
+        ondragend: (e) => {
+          e.target.classList.remove('dragging');
+        }
+      }, formatEuro(montant));
+      amountsContainer.appendChild(dragAmount);
+    });
+
+    // Add drop zone support to bring amounts back
+    amountsContainer.ondragover = (e) => e.preventDefault();
+    amountsContainer.ondrop = (e) => {
+      e.preventDefault();
+      // Allow amounts to be returned to the source zone
+      const amountData = e.dataTransfer.getData('amount');
+      const amount = parseFloat(amountData);
+
+      if (!isNaN(amount)) {
+        // Add amount back to available amounts if not already there
+        if (!this.availableAmounts.includes(amount)) {
+          this.availableAmounts.push(amount);
+          this.render();
+        }
+      }
+    };
+
+    zone.appendChild(amountsContainer);
+
+    const hint = createElement('p', {
+      className: 'text-sm text-secondary mt-sm'
+    }, 'Glisse les montants vers le tableau de budget →');
+    zone.appendChild(hint);
+
+    return zone;
   }
 
   createDocumentCard(doc) {
@@ -310,6 +349,7 @@ export class BudgetBoard {
     e.currentTarget.classList.remove('drag-over');
 
     const amountData = e.dataTransfer.getData('amount');
+    const amountIndex = e.dataTransfer.getData('amountIndex');
     const amount = parseFloat(amountData);
 
     // Validation: vérifier que le montant est un nombre valide
@@ -321,12 +361,20 @@ export class BudgetBoard {
 
     const dropZone = e.currentTarget;
 
+    // If there's already an amount in this cell, return it to available amounts
+    if (this.placedAmounts[item.libelle]) {
+      const previousAmount = this.placedAmounts[item.libelle];
+      this.availableAmounts.push(previousAmount);
+    }
+
     dropZone.innerHTML = '';
     const amountEl = createElement('div', {
       className: 'draggable-amount',
       draggable: 'true',
       ondragstart: (ev) => {
         ev.dataTransfer.setData('amount', String(amount));
+        ev.dataTransfer.setData('fromPlaced', 'true');
+        ev.dataTransfer.setData('rubrique', item.libelle);
         ev.target.classList.add('dragging');
       },
       ondragend: (ev) => ev.target.classList.remove('dragging')
@@ -336,7 +384,23 @@ export class BudgetBoard {
     dropZone.classList.add('filled');
 
     this.placedAmounts[item.libelle] = amount;
+
+    // Remove from available amounts if it came from there
+    if (amountIndex !== '') {
+      const index = this.availableAmounts.indexOf(amount);
+      if (index > -1) {
+        this.availableAmounts.splice(index, 1);
+      }
+    } else if (e.dataTransfer.getData('fromPlaced') === 'true') {
+      // Moving from one budget cell to another
+      const fromRubrique = e.dataTransfer.getData('rubrique');
+      if (fromRubrique && fromRubrique !== item.libelle) {
+        delete this.placedAmounts[fromRubrique];
+      }
+    }
+
     this.updateTotals();
+    this.render();
   }
 
   showDocumentDetail(doc) {
@@ -507,6 +571,7 @@ export class BudgetBoard {
     this.placedAmounts = {};
     this.validatedDocuments = new Set();
     this.isValidated = false;
+    this.availableAmounts = [];
     this.render();
   }
 
