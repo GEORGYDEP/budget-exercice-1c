@@ -45,22 +45,25 @@ export class BudgetBoard {
 
   render() {
     this.container.innerHTML = '';
-    
+
     const layout = createElement('div', { className: 'budget-layout' });
-    
+
     // Galerie de documents (gauche)
     const gallery = this.createDocumentsGallery();
     layout.appendChild(gallery);
-    
+
     // Tableau de budget (droite)
     const budgetTable = this.createBudgetTable();
     layout.appendChild(budgetTable);
-    
+
     this.container.appendChild(layout);
-    
+
     // Boutons d'action
     const actions = this.createActions();
     this.container.appendChild(actions);
+
+    // Restore totals after rendering
+    this.updateTotals();
   }
 
   createDocumentsGallery() {
@@ -163,9 +166,9 @@ export class BudgetBoard {
     const container = createElement('div', { className: 'budget-table-container' });
     const title = createElement('h3', {}, 'Budget du mois - Septembre');
     container.appendChild(title);
-    
+
     const table = createElement('table', { className: 'budget-table' });
-    
+
     // Header
     const thead = createElement('thead');
     const headerRow = createElement('tr');
@@ -173,35 +176,28 @@ export class BudgetBoard {
     headerRow.appendChild(createElement('th', {}, 'Montant (€)'));
     thead.appendChild(headerRow);
     table.appendChild(thead);
-    
+
     const tbody = createElement('tbody');
-    
-    // Entrées
-    tbody.appendChild(this.createSectionHeader('Entrées'));
-    this.budgetData.entrees.forEach(item => {
-      tbody.appendChild(this.createBudgetRow(item));
-    });
-    tbody.appendChild(this.createTotalRow('Total Entrées', 'total-entrees'));
-    
+
     // Sorties fixes
     tbody.appendChild(this.createSectionHeader('Sorties fixes'));
     this.budgetData.sorties_fixes.forEach(item => {
       tbody.appendChild(this.createBudgetRow(item));
     });
-    
+
     // Sorties variables
     tbody.appendChild(this.createSectionHeader('Sorties variables'));
     this.budgetData.sorties_variables.forEach(item => {
       tbody.appendChild(this.createBudgetRow(item));
     });
     tbody.appendChild(this.createTotalRow('Total Sorties', 'total-sorties'));
-    
+
     // Solde
     tbody.appendChild(this.createBalanceRow());
-    
+
     table.appendChild(tbody);
     container.appendChild(table);
-    
+
     return container;
   }
 
@@ -215,7 +211,7 @@ export class BudgetBoard {
   createBudgetRow(item) {
     const row = createElement('tr');
     row.appendChild(createElement('td', { className: 'budget-row-label' }, item.libelle));
-    
+
     const amountCell = createElement('td', { className: 'budget-row-amount' });
     const dropZone = createElement('div', {
       className: 'drop-zone',
@@ -224,9 +220,27 @@ export class BudgetBoard {
       ondrop: (e) => this.handleDrop(e, item),
       ondragleave: (e) => this.handleDragLeave(e)
     });
+
+    // Restore previously placed amount if exists
+    if (this.placedAmounts[item.libelle]) {
+      const amount = this.placedAmounts[item.libelle];
+      const amountEl = createElement('div', {
+        className: 'draggable-amount',
+        draggable: 'true',
+        ondragstart: (ev) => {
+          ev.dataTransfer.setData('amount', amount);
+          ev.target.classList.add('dragging');
+        },
+        ondragend: (ev) => ev.target.classList.remove('dragging')
+      }, formatEuro(amount));
+
+      dropZone.appendChild(amountEl);
+      dropZone.classList.add('filled');
+    }
+
     amountCell.appendChild(dropZone);
     row.appendChild(amountCell);
-    
+
     return row;
   }
 
