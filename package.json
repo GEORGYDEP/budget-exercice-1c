@@ -1,0 +1,29 @@
+{
+  "name": "budget-menage-jeu",
+  "version": "1.0.0",
+  "description": "Jeu éducatif pour apprendre à gérer un budget de ménage - basé sur des documents financiers réels",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "lint": "eslint src"
+  },
+  "keywords": [
+    "éducation",
+    "budget",
+    "finances",
+    "jeu-pédagogique"
+  ],
+  "author": "G.Depret",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "eslint": "^8.55.0"
+  },
+  "dependencies": {}
+}
