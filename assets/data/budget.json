@@ -1,0 +1,103 @@
+{
+  "entrees": [
+    {
+      "type": "revenu",
+      "libelle": "Salaire de Jules",
+      "montantAttendu": 1750.0,
+      "sourceDocId": "extrait-bancaire"
+    },
+    {
+      "type": "allocation",
+      "libelle": "Chômage de Julie",
+      "montantAttendu": 352.52,
+      "sourceDocId": "extrait-bancaire"
+    }
+  ],
+  "sorties_fixes": [
+    {
+      "type": "fixe",
+      "libelle": "Loyer",
+      "montantAttendu": 746.0,
+      "sourceDocId": "quittance-loyer"
+    },
+    {
+      "type": "fixe",
+      "libelle": "Assurance voiture",
+      "montantAttendu": 35.28,
+      "sourceDocId": "assurance-voiture"
+    },
+    {
+      "type": "fixe",
+      "libelle": "Proximus",
+      "montantAttendu": 69.18,
+      "sourceDocId": "proximus"
+    },
+    {
+      "type": "fixe",
+      "libelle": "Frais de gestion",
+      "montantAttendu": 2.3,
+      "sourceDocId": "extrait-bancaire"
+    },
+    {
+      "type": "fixe",
+      "libelle": "Luminus",
+      "montantAttendu": 61.76,
+      "sourceDocId": "extrait-bancaire"
+    }
+  ],
+  "sorties_variables": [
+    {
+      "type": "variable",
+      "libelle": "Restaurant",
+      "montantAttendu": 50.0,
+      "sourceDocId": "restaurant"
+    },
+    {
+      "type": "variable",
+      "libelle": "Médecin",
+      "montantAttendu": 28.25,
+      "sourceDocId": "medecin"
+    },
+    {
+      "type": "variable",
+      "libelle": "Carte de train",
+      "montantAttendu": 48.5,
+      "sourceDocId": "bus"
+    },
+    {
+      "type": "variable",
+      "libelle": "IKEA",
+      "montantAttendu": 35.5,
+      "sourceDocId": "ikea"
+    },
+    {
+      "type": "variable",
+      "libelle": "Papeterie",
+      "montantAttendu": 57.27,
+      "sourceDocId": "papeterie"
+    },
+    {
+      "type": "variable",
+      "libelle": "Alimentation",
+      "montantAttendu": 533.46,
+      "sourceDocId": "visa"
+    },
+    {
+      "type": "variable",
+      "libelle": "Habillement",
+      "montantAttendu": 30.0,
+      "sourceDocId": "visa"
+    },
+    {
+      "type": "variable",
+      "libelle": "Carburant",
+      "montantAttendu": 52.5,
+      "sourceDocId": "visa"
+    }
+  ],
+  "totaux": {
+    "total_entrees": 2102.52,
+    "total_sorties": 1750.0,
+    "solde": 352.52
+  }
+}

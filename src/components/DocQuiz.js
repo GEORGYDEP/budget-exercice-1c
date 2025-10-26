@@ -5,6 +5,7 @@
 import { createElement, formatEuro, announce, wait } from '../utils/dom.js';
 import { t } from '../utils/i18n.js';
 import { ScoringService } from '../services/scoring.js';
+import { resolveAssetUrl } from '../utils/assets.js';
 
 export class DocQuiz {
   constructor(container) {
@@ -15,15 +16,26 @@ export class DocQuiz {
     this.score = 0;
     this.scoringService = new ScoringService();
     this.listeners = {};
+    this.documentsMap = {};
   }
 
   async init() {
     try {
-      // Charger les données du quiz
-      const response = await fetch('./assets/data/quiz.json');
-      const quizData = await response.json();
+      // Charger les données du quiz et les métadonnées des documents
+      const [quizResponse, docsResponse] = await Promise.all([
+        fetch(resolveAssetUrl('assets/data/quiz.json')),
+        fetch(resolveAssetUrl('assets/data/documents.json'))
+      ]);
+
+      const quizData = await quizResponse.json();
+      const documents = await docsResponse.json();
+
       this.questions = quizData.partie1_documents;
-      
+      this.documentsMap = documents.reduce((acc, doc) => {
+        acc[doc.id] = doc;
+        return acc;
+      }, {});
+
       // Render le quiz
       this.render();
     } catch (error) {
@@ -46,59 +58,79 @@ export class DocQuiz {
   }
 
   createQuestionCard(question) {
-    const card = createElement('div', { className: 'quiz-question', role: 'group', 'aria-labelledby': `question-${question.id}` });
-    
+    const card = createElement('div', {
+      className: 'quiz-question',
+      role: 'group',
+      'aria-labelledby': `question-${question.id}`
+    });
+
     // Header
     const header = createElement('div', { className: 'quiz-question-header' });
-    const questionNumber = createElement('span', { className: 'quiz-question-number' }, 
-      `Question ${this.currentQuestion + 1}/${this.questions.length}`
-    );
-    header.appendChild(questionNumber);
+    header.appendChild(createElement('span', {
+      className: 'quiz-question-number'
+    }, `Question ${this.currentQuestion + 1}/${this.questions.length}`));
     card.appendChild(header);
-    
-    // Question text
-    const questionText = createElement('h3', { 
+
+    const content = createElement('div', { className: 'quiz-question-content' });
+
+    const mediaColumn = createElement('div', { className: 'quiz-question-media' });
+    if (question.docId) {
+      mediaColumn.appendChild(this.createDocumentPreview(question.docId));
+    }
+
+    const detailsColumn = createElement('div', { className: 'quiz-question-details' });
+    const questionText = createElement('h3', {
       className: 'quiz-question-text',
       id: `question-${question.id}`
     }, question.question);
-    card.appendChild(questionText);
-    
-    // Document preview
-    if (question.docId) {
-      const preview = this.createDocumentPreview(question.docId);
-      card.appendChild(preview);
-    }
-    
-    // Options
+    detailsColumn.appendChild(questionText);
+
     const optionsContainer = createElement('div', { className: 'quiz-options', role: 'radiogroup' });
     question.options.forEach((option, index) => {
       const optionElement = this.createOption(option, index, question);
       optionsContainer.appendChild(optionElement);
     });
-    card.appendChild(optionsContainer);
-    
+    detailsColumn.appendChild(optionsContainer);
+
+    content.appendChild(mediaColumn);
+    content.appendChild(detailsColumn);
+    card.appendChild(content);
+
     return card;
   }
 
   createDocumentPreview(docId) {
+    const doc = this.documentsMap[docId];
     const preview = createElement('div', { className: 'quiz-document-preview' });
-    const img = createElement('img', {
-      src: `./assets/images/page_${this.getPageNumber(docId)}.png`,
-      alt: `Document ${docId}`,
-      role: 'img',
-      tabindex: '0',
-      'aria-label': 'Document financier - cliquer pour agrandir'
-    });
-    
-    img.addEventListener('click', () => this.showLightbox(img.src));
-    img.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        this.showLightbox(img.src);
-      }
-    });
-    
-    preview.appendChild(img);
+
+    if (doc && (doc.imagePath || doc.pagePDF)) {
+      const imageUrl = resolveAssetUrl(doc.imagePath || `assets/images/page_${this.getPageNumber(docId)}.png`);
+      const img = createElement('img', {
+        src: imageUrl,
+        alt: doc.titre || `Document ${docId}`,
+        role: 'img',
+        tabindex: '0',
+        'aria-label': 'Document financier - cliquer pour agrandir'
+      });
+
+      img.addEventListener('error', () => {
+        preview.innerHTML = '';
+        preview.appendChild(this.createDocumentFallback(docId));
+      });
+
+      img.addEventListener('click', () => this.showLightbox(imageUrl));
+      img.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.showLightbox(imageUrl);
+        }
+      });
+
+      preview.appendChild(img);
+    } else {
+      preview.appendChild(this.createDocumentFallback(docId));
+    }
+
     return preview;
   }
 
@@ -117,6 +149,41 @@ export class DocQuiz {
       'carrefour': 10
     };
     return pageMap[docId] || 1;
+  }
+
+  createDocumentFallback(docId) {
+    const doc = this.documentsMap[docId];
+    const placeholder = createElement('div', {
+      className: 'document-placeholder',
+      role: 'img',
+      tabindex: '0',
+      'aria-label': doc
+        ? `${doc.titre}. ${doc.libelles?.join(', ') || ''}`.trim()
+        : `Aperçu indisponible pour le document ${docId}`
+    });
+
+    const title = createElement('p', { className: 'document-placeholder-title' }, doc?.titre || docId);
+    placeholder.appendChild(title);
+
+    if (doc?.libelles?.length) {
+      const list = createElement('ul', { className: 'document-placeholder-list' });
+      doc.libelles.forEach(libelle => {
+        list.appendChild(createElement('li', {}, libelle));
+      });
+      placeholder.appendChild(list);
+    } else {
+      placeholder.appendChild(createElement('p', { className: 'document-placeholder-hint' }, 'Aperçu image indisponible.'));
+    }
+
+    if (doc?.montants?.length) {
+      const amounts = createElement('div', { className: 'document-placeholder-amounts' });
+      doc.montants.forEach(montant => {
+        amounts.appendChild(createElement('span', { className: 'draggable-amount is-static' }, formatEuro(montant)));
+      });
+      placeholder.appendChild(amounts);
+    }
+
+    return placeholder;
   }
 
   createOption(option, index, question) {

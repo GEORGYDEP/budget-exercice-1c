@@ -5,6 +5,7 @@
 import { createElement, formatEuro, announce } from '../utils/dom.js';
 import { ValidationService } from '../services/validation.js';
 import { ScoringService } from '../services/scoring.js';
+import { resolveAssetUrl } from '../utils/assets.js';
 
 export class BudgetBoard {
   constructor(container) {
@@ -21,12 +22,16 @@ export class BudgetBoard {
   async init() {
     try {
       const [budgetRes, docsRes] = await Promise.all([
-        fetch('./assets/data/budget.json'),
-        fetch('./assets/data/documents.json')
+        fetch(resolveAssetUrl('assets/data/budget.json')),
+        fetch(resolveAssetUrl('assets/data/documents.json'))
       ]);
-      
+
       this.budgetData = await budgetRes.json();
-      this.documents = await docsRes.json();
+      const documentsData = await docsRes.json();
+      this.documents = documentsData.map(doc => ({
+        ...doc,
+        imagePath: doc.imagePath ? resolveAssetUrl(doc.imagePath) : null
+      }));
       
       this.render();
     } catch (error) {
@@ -71,20 +76,63 @@ export class BudgetBoard {
   }
 
   createDocumentCard(doc) {
-    const card = createElement('div', { 
+    const card = createElement('article', {
       className: 'document-card',
+      role: 'group',
+      'aria-label': doc.titre
+    });
+
+    const preview = createElement('button', {
+      className: 'document-card-preview',
+      type: 'button',
+      'aria-label': `Voir le document ${doc.titre}`,
       onclick: () => this.showDocumentDetail(doc)
     });
-    
-    const img = createElement('img', {
-      src: doc.imagePath,
-      alt: doc.titre
-    });
-    card.appendChild(img);
-    
+
+    if (doc.imagePath) {
+      const img = createElement('img', {
+        src: doc.imagePath,
+        alt: doc.titre
+      });
+
+      img.addEventListener('error', () => {
+        preview.innerHTML = '';
+        preview.appendChild(this.createDocumentPlaceholder(doc));
+      });
+
+      preview.appendChild(img);
+    } else {
+      preview.appendChild(this.createDocumentPlaceholder(doc));
+    }
+
+    card.appendChild(preview);
+
     const label = createElement('div', { className: 'document-card-label' }, doc.titre);
     card.appendChild(label);
-    
+
+    if (doc.montants?.length) {
+      const amounts = createElement('div', { className: 'document-card-amounts', role: 'list' });
+      doc.montants.forEach((montant, index) => {
+        const description = doc.libelles?.[index]
+          ? `${doc.libelles[index]} - ${formatEuro(montant)}`
+          : formatEuro(montant);
+        const chip = createElement('button', {
+          className: 'draggable-amount',
+          type: 'button',
+          draggable: 'true',
+          role: 'listitem',
+          'aria-label': `Glisser ${description}`,
+          ondragstart: (e) => this.handleAmountDragStart(e, montant, doc),
+          ondragend: (e) => e.currentTarget.classList.remove('dragging'),
+          onclick: (e) => this.handleAmountQuickAssign(e, montant, doc)
+        }, formatEuro(montant));
+
+        chip.addEventListener('dragstart', (e) => e.currentTarget.classList.add('dragging'));
+        amounts.appendChild(chip);
+      });
+      card.appendChild(amounts);
+    }
+
     return card;
   }
 
@@ -206,25 +254,48 @@ export class BudgetBoard {
   handleDrop(e, item) {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
-    
-    const amount = parseFloat(e.dataTransfer.getData('amount'));
+
+    const amountValue = e.dataTransfer.getData('amount');
+    const amount = parseFloat(amountValue);
+    const sourceRubrique = e.dataTransfer.getData('sourceRubrique');
+    const sourceDocId = e.dataTransfer.getData('docId');
+
+    if (Number.isNaN(amount)) {
+      announce('Montant indisponible pour ce déplacement.');
+      return;
+    }
+
     const dropZone = e.currentTarget;
-    
+
     dropZone.innerHTML = '';
     const amountEl = createElement('div', {
       className: 'draggable-amount',
       draggable: 'true',
       ondragstart: (ev) => {
         ev.dataTransfer.setData('amount', amount);
+        ev.dataTransfer.setData('sourceRubrique', item.libelle);
+        if (sourceDocId) {
+          ev.dataTransfer.setData('docId', sourceDocId);
+        }
         ev.target.classList.add('dragging');
       },
       ondragend: (ev) => ev.target.classList.remove('dragging')
     }, formatEuro(amount));
-    
+
     dropZone.appendChild(amountEl);
     dropZone.classList.add('filled');
-    
+
     this.placedAmounts[item.libelle] = amount;
+
+    if (sourceRubrique && sourceRubrique !== item.libelle) {
+      delete this.placedAmounts[sourceRubrique];
+      const sourceZone = this.container.querySelector(`[data-rubrique="${sourceRubrique}"]`);
+      if (sourceZone) {
+        sourceZone.innerHTML = '';
+        sourceZone.classList.remove('filled', 'error');
+      }
+    }
+
     this.updateTotals();
   }
 
@@ -232,36 +303,126 @@ export class BudgetBoard {
     // Créer et afficher un modal avec les détails
     const modal = createElement('div', { className: 'modal-overlay' });
     const content = createElement('div', { className: 'modal-content' });
-    const img = createElement('img', { src: doc.imagePath });
     const closeBtn = createElement('button', {
       className: 'modal-close',
       onclick: () => modal.remove()
     }, '×');
-    
-    // Ajouter montants disponibles
+
     if (doc.montants && doc.montants.length > 0) {
-      const amounts = createElement('div', { className: 'mt-md' });
-      doc.montants.forEach(montant => {
+      const amounts = createElement('div', { className: 'modal-amounts mt-md' });
+      doc.montants.forEach((montant, index) => {
+        const description = doc.libelles?.[index]
+          ? `${doc.libelles[index]} - ${formatEuro(montant)}`
+          : formatEuro(montant);
         const drag = createElement('div', {
           className: 'draggable-amount',
           draggable: 'true',
           ondragstart: (e) => {
             e.dataTransfer.setData('amount', montant);
+            e.dataTransfer.setData('docId', doc.id);
             e.target.classList.add('dragging');
           },
           ondragend: (e) => e.target.classList.remove('dragging')
-        }, formatEuro(montant));
+        }, description);
         amounts.appendChild(drag);
       });
       content.appendChild(amounts);
     }
-    
-    content.appendChild(img);
+
+    if (doc.imagePath) {
+      const img = createElement('img', { src: doc.imagePath, alt: doc.titre });
+      img.addEventListener('error', () => {
+        img.replaceWith(this.createDocumentPlaceholder(doc));
+      });
+      content.appendChild(img);
+    } else {
+      content.appendChild(this.createDocumentPlaceholder(doc));
+    }
     content.appendChild(closeBtn);
     modal.appendChild(content);
     
     modal.onclick = (e) => e.target === modal && modal.remove();
     document.body.appendChild(modal);
+  }
+
+  handleAmountDragStart(event, montant, doc) {
+    event.dataTransfer.setData('amount', montant);
+    event.dataTransfer.setData('docId', doc.id);
+  }
+
+  handleAmountQuickAssign(event, montant, doc) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const targetZone = this.findFirstEmptyDropZone();
+    if (!targetZone) {
+      announce('Toutes les rubriques sont déjà remplies.');
+      return;
+    }
+
+    const rubrique = targetZone.getAttribute('data-rubrique');
+    const budgetItem = this.findBudgetItemByLabel(rubrique);
+
+    if (budgetItem) {
+      const dataTransfer = typeof DataTransfer !== 'undefined'
+        ? new DataTransfer()
+        : {
+            _data: {},
+            setData(type, value) { this._data[type] = value; },
+            getData(type) { return this._data[type] || ''; }
+          };
+
+      dataTransfer.setData('amount', montant);
+      dataTransfer.setData('docId', doc.id);
+
+      this.handleDrop({
+        preventDefault: () => {},
+        currentTarget: targetZone,
+        dataTransfer
+      }, budgetItem);
+      announce(`${formatEuro(montant)} placé dans ${rubrique}`);
+    }
+  }
+
+  findFirstEmptyDropZone() {
+    return this.container.querySelector('.drop-zone:not(.filled)');
+  }
+
+  findBudgetItemByLabel(label) {
+    const allItems = [
+      ...this.budgetData.entrees,
+      ...this.budgetData.sorties_fixes,
+      ...this.budgetData.sorties_variables
+    ];
+    return allItems.find(item => item.libelle === label);
+  }
+
+  createDocumentPlaceholder(doc) {
+    const placeholder = createElement('div', {
+      className: 'document-placeholder',
+      role: 'img',
+      tabindex: '-1',
+      'aria-label': doc.libelles?.join(', ') || doc.titre
+    });
+
+    const title = createElement('p', { className: 'document-placeholder-title' }, doc.titre);
+    placeholder.appendChild(title);
+
+    if (doc.libelles?.length) {
+      const list = createElement('ul', { className: 'document-placeholder-list' });
+      doc.libelles.forEach(libelle => list.appendChild(createElement('li', {}, libelle)));
+      placeholder.appendChild(list);
+    }
+
+    if (doc.montants?.length) {
+      const amounts = createElement('div', { className: 'document-placeholder-amounts' });
+      doc.montants.forEach(montant => {
+        amounts.appendChild(createElement('span', { className: 'draggable-amount is-static' }, formatEuro(montant)));
+      });
+      placeholder.appendChild(amounts);
+    }
+
+    return placeholder;
   }
 
   updateTotals() {
