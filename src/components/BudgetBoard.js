@@ -92,16 +92,16 @@ export class BudgetBoard {
 
       // Show draggable amounts if document has amounts
       if (currentDoc.montants && currentDoc.montants.length > 0) {
-        const amountsSection = createElement('div', { className: 'mt-md' });
+        const amountsSection = createElement('div', { className: 'mt-sm' });
         const amountsTitle = createElement('p', {
           className: 'text-sm mb-sm',
-          style: 'font-weight: 600;'
+          style: 'font-weight: 600; color: var(--color-primary);'
         }, 'Montants à classer :');
         amountsSection.appendChild(amountsTitle);
 
         const amountsContainer = createElement('div', {
           className: 'flex gap-sm',
-          style: 'flex-wrap: wrap;'
+          style: 'flex-wrap: wrap; align-items: center;'
         });
 
         currentDoc.montants.forEach(montant => {
@@ -109,7 +109,7 @@ export class BudgetBoard {
             className: 'draggable-amount',
             draggable: 'true',
             ondragstart: (e) => {
-              e.dataTransfer.setData('amount', montant);
+              e.dataTransfer.setData('amount', String(montant));
               e.dataTransfer.setData('docId', currentDoc.id);
               e.target.classList.add('dragging');
             },
@@ -228,7 +228,7 @@ export class BudgetBoard {
         className: 'draggable-amount',
         draggable: 'true',
         ondragstart: (ev) => {
-          ev.dataTransfer.setData('amount', amount);
+          ev.dataTransfer.setData('amount', String(amount));
           ev.target.classList.add('dragging');
         },
         ondragend: (ev) => ev.target.classList.remove('dragging')
@@ -308,24 +308,33 @@ export class BudgetBoard {
   handleDrop(e, item) {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
-    
-    const amount = parseFloat(e.dataTransfer.getData('amount'));
+
+    const amountData = e.dataTransfer.getData('amount');
+    const amount = parseFloat(amountData);
+
+    // Validation: vérifier que le montant est un nombre valide
+    if (isNaN(amount) || amount === null || amount === undefined) {
+      console.error('Montant invalide:', amountData);
+      announce('Erreur: montant invalide');
+      return;
+    }
+
     const dropZone = e.currentTarget;
-    
+
     dropZone.innerHTML = '';
     const amountEl = createElement('div', {
       className: 'draggable-amount',
       draggable: 'true',
       ondragstart: (ev) => {
-        ev.dataTransfer.setData('amount', amount);
+        ev.dataTransfer.setData('amount', String(amount));
         ev.target.classList.add('dragging');
       },
       ondragend: (ev) => ev.target.classList.remove('dragging')
     }, formatEuro(amount));
-    
+
     dropZone.appendChild(amountEl);
     dropZone.classList.add('filled');
-    
+
     this.placedAmounts[item.libelle] = amount;
     this.updateTotals();
   }
@@ -348,7 +357,7 @@ export class BudgetBoard {
           className: 'draggable-amount',
           draggable: 'true',
           ondragstart: (e) => {
-            e.dataTransfer.setData('amount', montant);
+            e.dataTransfer.setData('amount', String(montant));
             e.target.classList.add('dragging');
           },
           ondragend: (e) => e.target.classList.remove('dragging')
