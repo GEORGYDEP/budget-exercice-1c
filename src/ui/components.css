@@ -337,17 +337,21 @@
 
 /* Draggable amount */
 .draggable-amount {
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-md) var(--space-lg);
   background: var(--color-primary);
   color: white;
   border-radius: var(--radius-md);
   cursor: grab;
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
   transition: all var(--transition-base);
   user-select: none;
+  box-shadow: var(--shadow-md);
+  min-width: 80px;
+  justify-content: center;
 }
 
 .draggable-amount:hover {
