@@ -6,6 +6,7 @@ import { createElement, formatEuro, announce } from '../utils/dom.js';
 import { ValidationService } from '../services/validation.js';
 import { ScoringService } from '../services/scoring.js';
 import { resolveAssetUrl } from '../utils/assets.js';
+import { initTouchDrag } from '../utils/touch-drag.js';
 
 export class BudgetBoard {
   constructor(container) {
@@ -20,6 +21,7 @@ export class BudgetBoard {
     this.listeners = {};
     this.isValidated = false;
     this.availableAmounts = []; // Track available amounts in the center zone
+    this.autoValidateTimeout = null; // Track auto-validation timeout
   }
 
   async init() {
@@ -38,6 +40,9 @@ export class BudgetBoard {
 
       this.render();
       this.emitProgress(); // Emit initial progress
+
+      // Initialize touch drag support for tablets
+      initTouchDrag();
     } catch (error) {
       console.error('Erreur chargement budget:', error);
       this.container.innerHTML = '<p class="feedback-message error">Erreur lors du chargement</p>';
@@ -266,8 +271,14 @@ export class BudgetBoard {
       const amountEl = createElement('div', {
         className: 'draggable-amount',
         draggable: 'true',
+        dataset: {
+          amount: String(amount),
+          amountIndex: ''
+        },
         ondragstart: (ev) => {
           ev.dataTransfer.setData('amount', String(amount));
+          ev.dataTransfer.setData('fromPlaced', 'true');
+          ev.dataTransfer.setData('rubrique', item.libelle);
           ev.target.classList.add('dragging');
         },
         ondragend: (ev) => ev.target.classList.remove('dragging')
@@ -304,14 +315,14 @@ export class BudgetBoard {
 
     // Show different actions based on progress
     if (this.currentDocumentIndex < this.documents.length) {
-      // Validate current document button
-      const validateDocBtn = createElement('button', {
-        className: 'btn btn-primary',
-        onclick: () => this.validateCurrentDocument()
-      }, `Valider le document ${this.currentDocumentIndex + 1}`);
-      actions.appendChild(validateDocBtn);
+      // Auto-validation message instead of manual button
+      const autoValidateMsg = createElement('p', {
+        className: 'text-secondary text-center',
+        id: 'auto-validate-message'
+      }, 'Place les montants dans le tableau. La validation se fera automatiquement.');
+      actions.appendChild(autoValidateMsg);
 
-      // Skip document button (optional)
+      // Skip document button (optional) - kept for user control
       const skipBtn = createElement('button', {
         className: 'btn btn-secondary',
         onclick: () => this.skipDocument()
@@ -360,24 +371,53 @@ export class BudgetBoard {
     }
 
     const dropZone = e.currentTarget;
+    const fromRubrique = e.dataTransfer.getData('rubrique');
+    const fromPlaced = e.dataTransfer.getData('fromPlaced') === 'true';
 
-    // If there's already an amount in this cell, return it to available amounts
-    if (this.placedAmounts[item.libelle]) {
-      const previousAmount = this.placedAmounts[item.libelle];
-      this.availableAmounts.push(previousAmount);
+    // If dropping on the same cell, do nothing
+    if (fromPlaced && fromRubrique === item.libelle) {
+      return;
     }
 
+    // If there's already an amount in this target cell, return it to available amounts
+    if (this.placedAmounts[item.libelle]) {
+      const previousAmount = this.placedAmounts[item.libelle];
+      // Only add back if it's not already in available amounts
+      if (!this.availableAmounts.includes(previousAmount)) {
+        this.availableAmounts.push(previousAmount);
+      }
+    }
+
+    // Remove the amount from its previous location
+    if (fromPlaced && fromRubrique && fromRubrique !== item.libelle) {
+      // Moving from one budget cell to another
+      delete this.placedAmounts[fromRubrique];
+    } else if (!fromPlaced) {
+      // Coming from available amounts - remove it from there
+      const index = this.availableAmounts.indexOf(amount);
+      if (index > -1) {
+        this.availableAmounts.splice(index, 1);
+      }
+    }
+
+    // Place the amount in the new cell
     dropZone.innerHTML = '';
     const amountEl = createElement('div', {
       className: 'draggable-amount',
       draggable: 'true',
+      dataset: {
+        amount: String(amount),
+        amountIndex: ''
+      },
       ondragstart: (ev) => {
         ev.dataTransfer.setData('amount', String(amount));
         ev.dataTransfer.setData('fromPlaced', 'true');
         ev.dataTransfer.setData('rubrique', item.libelle);
         ev.target.classList.add('dragging');
       },
-      ondragend: (ev) => ev.target.classList.remove('dragging')
+      ondragend: (ev) => {
+        ev.target.classList.remove('dragging');
+      }
     }, formatEuro(amount));
 
     dropZone.appendChild(amountEl);
@@ -385,22 +425,11 @@ export class BudgetBoard {
 
     this.placedAmounts[item.libelle] = amount;
 
-    // Remove from available amounts if it came from there
-    if (amountIndex !== '') {
-      const index = this.availableAmounts.indexOf(amount);
-      if (index > -1) {
-        this.availableAmounts.splice(index, 1);
-      }
-    } else if (e.dataTransfer.getData('fromPlaced') === 'true') {
-      // Moving from one budget cell to another
-      const fromRubrique = e.dataTransfer.getData('rubrique');
-      if (fromRubrique && fromRubrique !== item.libelle) {
-        delete this.placedAmounts[fromRubrique];
-      }
-    }
-
     this.updateTotals();
     this.render();
+
+    // Check if we should auto-validate the current document
+    this.checkAndAutoValidate();
   }
 
   showDocumentDetail(doc) {
@@ -472,14 +501,44 @@ export class BudgetBoard {
     }
   }
 
+  checkAndAutoValidate() {
+    // Clear any existing timeout
+    if (this.autoValidateTimeout) {
+      clearTimeout(this.autoValidateTimeout);
+      this.autoValidateTimeout = null;
+    }
+
+    // Check if all amounts from current document have been placed
+    if (this.currentDocumentIndex >= this.documents.length) {
+      return; // No more documents to validate
+    }
+
+    const currentDoc = this.documents[this.currentDocumentIndex];
+
+    // Check if all amounts from this document are placed in the budget
+    if (this.availableAmounts.length === 0 && currentDoc.montants && currentDoc.montants.length > 0) {
+      // All amounts have been placed, trigger auto-validation after 2 seconds
+      const msgEl = document.getElementById('auto-validate-message');
+      if (msgEl) {
+        msgEl.textContent = 'Document validé ! Passage au suivant dans 2 secondes...';
+        msgEl.classList.add('success');
+      }
+
+      announce('Document validé. Passage au document suivant dans 2 secondes.');
+
+      this.autoValidateTimeout = setTimeout(() => {
+        this.validateCurrentDocument();
+      }, 2000);
+    }
+  }
+
   validateCurrentDocument() {
     const currentDoc = this.documents[this.currentDocumentIndex];
 
-    // Check if all amounts from current document are placed
-    let allPlaced = true;
-    if (currentDoc.montants && currentDoc.montants.length > 0) {
-      // This is a simplified check - in a real implementation, you'd track which amounts belong to which documents
-      announce('Document validé. Passage au suivant...');
+    // Clear any pending auto-validation timeout
+    if (this.autoValidateTimeout) {
+      clearTimeout(this.autoValidateTimeout);
+      this.autoValidateTimeout = null;
     }
 
     // Mark as validated and move to next
