@@ -349,16 +349,46 @@ export class RevenueBoard {
       }
     });
 
-    // Calculate score: 10 points per correct revenue (total 20 points for 2 revenues)
+    // Calculate binary score: 5 if all correct, 0 otherwise
     const score = this.scoringService.calculatePart3Score(correctCount, totalItems);
 
+    // Disable all dragging after validation (no correction allowed)
+    this.disableDragging();
+
     if (correctCount === totalItems) {
-      announce(`Partie 3 terminée ! Score: ${score} sur 20`);
-      alert(`Félicitations ! Tu as placé tous les revenus correctement.\n\nScore: ${score}/20\n\nPassage à la partie 4...`);
-      this.emit('complete', score);
+      announce(`Bravo, vous avez obtenu 5/5 !`);
+      alert(`✅ Bravo, vous avez obtenu 5/5 !\n\nTous les revenus sont correctement placés.\n\nPassage à la partie 4...`);
     } else {
-      announce(`Certains montants sont incorrects. Vérifie les cases en rouge.`);
-      alert(`Attention : ${totalItems - correctCount} montant(s) incorrect(s).\n\nVérifie les cases en rouge et corrige-les avant de valider à nouveau.`);
+      announce(`Certaines réponses sont fausses. Vous obtenez 0/5.`);
+      alert(`❌ Certaines réponses sont fausses. Vous obtenez 0/5.\n\nPassage à la partie 4...`);
+    }
+
+    // Always emit complete event (with score 5 or 0)
+    this.emit('complete', score);
+  }
+
+  disableDragging() {
+    // Disable all draggable elements to prevent correction
+    const draggableElements = this.container.querySelectorAll('[draggable="true"]');
+    draggableElements.forEach(el => {
+      el.draggable = false;
+      el.style.cursor = 'default';
+      el.style.opacity = '0.8';
+    });
+
+    // Disable drop zones
+    const dropZones = this.container.querySelectorAll('.drop-zone');
+    dropZones.forEach(zone => {
+      zone.ondragover = null;
+      zone.ondrop = null;
+      zone.ondragleave = null;
+    });
+
+    // Disable amounts container drop zone
+    const amountsContainer = this.container.querySelector('#revenue-amounts-container');
+    if (amountsContainer) {
+      amountsContainer.ondragover = null;
+      amountsContainer.ondrop = null;
     }
   }
 
