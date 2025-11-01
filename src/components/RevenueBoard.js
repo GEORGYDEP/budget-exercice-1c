@@ -349,12 +349,12 @@ export class RevenueBoard {
       }
     });
 
-    // Calculate score: 2.5 points per correct revenue (total 5 points)
+    // Calculate score: 10 points per correct revenue (total 20 points for 2 revenues)
     const score = this.scoringService.calculatePart3Score(correctCount, totalItems);
 
     if (correctCount === totalItems) {
-      announce(`Partie 3 terminée ! Score: ${score} sur 5`);
-      alert(`Félicitations ! Tu as placé tous les revenus correctement.\n\nScore: ${score}/5\n\nPassage à la partie 4...`);
+      announce(`Partie 3 terminée ! Score: ${score} sur 20`);
+      alert(`Félicitations ! Tu as placé tous les revenus correctement.\n\nScore: ${score}/20\n\nPassage à la partie 4...`);
       this.emit('complete', score);
     } else {
       announce(`Certains montants sont incorrects. Vérifie les cases en rouge.`);

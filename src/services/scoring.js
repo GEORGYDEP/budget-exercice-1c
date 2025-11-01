@@ -4,77 +4,80 @@
 
 export class ScoringService {
   constructor() {
-    // Nouvelle pondération des parties (total /40)
+    // Nouvelle pondération des parties (total /80)
+    // Chaque partie est notée sur 20 points
     this.weights = {
-      part1: 10, // Quiz documents (10 questions)
-      part2: 20, // Dépenses
-      part3: 5,  // Revenus
-      part4: 5   // Quiz final (5 questions)
+      part1: 20, // Quiz documents (10 questions)
+      part2: 20, // Dépenses (13 montants)
+      part3: 20, // Revenus (2 montants)
+      part4: 20  // Quiz final (questions de synthèse)
     };
   }
 
   /**
-   * Calcule le score total sur 40
+   * Calcule le score total sur 80 (4 parties × 20 points)
    */
   calculateTotalScore(part1Score, part2Score, part3Score, part4Score) {
-    return Math.round(part1Score + part2Score + part3Score + part4Score);
+    // Return with 1 decimal place
+    return parseFloat((part1Score + part2Score + part3Score + part4Score).toFixed(1));
   }
 
   /**
    * Calcule le score pour la partie 1 (Quiz documents)
    * @param {number} correctAnswers - Nombre de réponses correctes
    * @param {number} totalQuestions - Nombre total de questions
-   * @returns {number} Score sur 10
+   * @returns {number} Score sur 20 (avec 1 décimale)
    */
   calculatePart1Score(correctAnswers, totalQuestions) {
     if (totalQuestions === 0) return 0;
-    return Math.round((correctAnswers / totalQuestions) * this.weights.part1);
+    const score = (correctAnswers / totalQuestions) * this.weights.part1;
+    return parseFloat(score.toFixed(1));
   }
 
   /**
    * Calcule le score pour la partie 2 (Dépenses)
-   * @param {number} correctItems - Nombre de montants corrects
-   * @param {number} totalItems - Nombre total de rubriques
-   * @param {boolean} balanceCorrect - Le solde est-il correct (optionnel)
-   * @returns {number} Score sur 20
+   * @param {number} correctItems - Nombre de montants corrects (sur 13)
+   * @param {number} totalItems - Doit être 13 (nombre de dépenses)
+   * @returns {number} Score sur 20 (avec 1 décimale)
    */
-  calculatePart2Score(correctItems, totalItems, balanceCorrect = true) {
+  calculatePart2Score(correctItems, totalItems = 13) {
     if (totalItems === 0) return 0;
 
-    // 18 points pour les rubriques, 2 points bonus pour le solde correct
-    const itemsScore = (correctItems / totalItems) * 18;
-    const balanceScore = balanceCorrect ? 2 : 0;
-
-    return Math.round(itemsScore + balanceScore);
+    // Score basé uniquement sur le nombre de montants corrects
+    // Formule: (montants corrects / 13) × 20
+    const score = (correctItems / totalItems) * this.weights.part2;
+    return parseFloat(score.toFixed(1));
   }
 
   /**
    * Calcule le score pour la partie 3 (Revenus)
    * @param {number} correctItems - Nombre de revenus corrects
-   * @param {number} totalItems - Nombre total de revenus (normalement 2)
-   * @returns {number} Score sur 5
+   * @param {number} totalItems - Nombre total de revenus (2)
+   * @returns {number} Score sur 20 (avec 1 décimale)
    */
-  calculatePart3Score(correctItems, totalItems) {
+  calculatePart3Score(correctItems, totalItems = 2) {
     if (totalItems === 0) return 0;
-    return Math.round((correctItems / totalItems) * this.weights.part3);
+    const score = (correctItems / totalItems) * this.weights.part3;
+    return parseFloat(score.toFixed(1));
   }
 
   /**
    * Calcule le score pour la partie 4 (Quiz final)
    * @param {number} correctAnswers - Nombre de réponses correctes
    * @param {number} totalQuestions - Nombre total de questions
-   * @returns {number} Score sur 5
+   * @returns {number} Score sur 20 (avec 1 décimale)
    */
   calculatePart4Score(correctAnswers, totalQuestions) {
     if (totalQuestions === 0) return 0;
-    return Math.round((correctAnswers / totalQuestions) * this.weights.part4);
+    const score = (correctAnswers / totalQuestions) * this.weights.part4;
+    return parseFloat(score.toFixed(1));
   }
 
   /**
-   * Retourne un message basé sur le score total (sur 40)
+   * Retourne un message basé sur le score total (sur 80)
    */
   getScoreMessage(totalScore) {
-    const percentage = (totalScore / 40) * 100;
+    const percentage = (totalScore / 80) * 100;
 
     if (percentage >= 90) {
       return 'Excellent ! Tu as une maîtrise exceptionnelle de la gestion budgétaire.';
@@ -92,7 +95,7 @@ export class ScoringService {
   /**
    * Retourne une note basée sur le score (A, B, C, D, E)
    */
-  getGrade(score, maxScore = 40) {
+  getGrade(score, maxScore = 80) {
     const percentage = (score / maxScore) * 100;
 
     if (percentage >= 90) return 'A';
@@ -119,9 +122,9 @@ export class ScoringService {
     return {
       total: {
         score: total,
-        maxScore: 40,
-        percentage: this.calculatePercentage(total, 40),
-        grade: this.getGrade(total, 40)
+        maxScore: 80,
+        percentage: this.calculatePercentage(total, 80),
+        grade: this.getGrade(total, 80)
       },
       parts: {
         documents: {
