@@ -49,6 +49,15 @@
   background-color: #059669;
 }
 
+.btn-warning {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background-color: #d97706;
+}
+
 .btn-small {
   padding: var(--space-sm) var(--space-md);
   font-size: var(--font-size-sm);

@@ -23,6 +23,8 @@ export class BudgetBoard {
     this.availableAmounts = []; // Track available amounts in the center zone
     this.autoValidateTimeout = null; // Track auto-validation timeout
     this.usedAmountIds = new Set(); // Track unique IDs of used amounts to prevent reuse
+    this.hasAttemptedValidation = false; // Track if validation has been attempted
+    this.validationFailed = false; // Track if validation failed
   }
 
   async init() {
@@ -276,6 +278,15 @@ export class BudgetBoard {
         onclick: () => this.validateFinal()
       }, 'Valider le budget complet');
       buttonsContainer.appendChild(validateAllBtn);
+
+      // Show "Skip to Part 3" button if validation has failed
+      if (this.validationFailed) {
+        const skipBtn = createElement('button', {
+          className: 'btn btn-warning',
+          onclick: () => this.skipToPart3()
+        }, 'Passer à la partie 3');
+        buttonsContainer.appendChild(skipBtn);
+      }
 
       const printBtn = createElement('button', {
         className: 'btn btn-secondary btn-small',
@@ -681,6 +692,9 @@ export class BudgetBoard {
   }
 
   validateFinal() {
+    // Mark that validation has been attempted
+    this.hasAttemptedValidation = true;
+
     // Transform placedAmounts arrays to totals for validation
     const placedAmountsForValidation = {};
     Object.entries(this.placedAmounts).forEach(([rubrique, amounts]) => {
@@ -691,27 +705,36 @@ export class BudgetBoard {
 
     const validation = this.validationService.validateBudget(placedAmountsForValidation, this.budgetData);
 
-    if (!validation.isComplete) {
-      announce('Budget incomplet. Complète toutes les rubriques.');
+    // Count only EXPENSE items (sorties_fixes + sorties_variables), not revenues
+    const expenseItems = [...this.budgetData.sorties_fixes, ...this.budgetData.sorties_variables];
+    const totalExpenseItems = expenseItems.length; // Should be 13
 
-      // Count missing items
-      const totalItems = [...this.budgetData.entrees, ...this.budgetData.sorties_fixes, ...this.budgetData.sorties_variables].length;
-      const placedItems = Object.keys(this.placedAmounts).filter(key => this.placedAmounts[key].length > 0).length;
-      const missingItems = totalItems - placedItems;
+    // Count placed expense items only
+    const placedExpenseItems = expenseItems.filter(item =>
+      this.placedAmounts[item.libelle] && this.placedAmounts[item.libelle].length > 0
+    ).length;
+
+    if (!validation.isComplete) {
+      this.validationFailed = true;
+      announce('Budget incomplet. Complète toutes les rubriques de dépenses.');
+
+      const missingItems = totalExpenseItems - placedExpenseItems;
 
       // Check if there are still documents to process
       const hasMoreDocuments = this.currentDocumentIndex < this.documents.length;
 
-      let message = `Budget incomplet !\n\nTu as rempli ${placedItems} postes sur ${totalItems}.\nIl manque encore ${missingItems} montant(s).`;
+      let message = `Budget incomplet !\n\nTu as rempli ${placedExpenseItems} postes de dépenses sur ${totalExpenseItems}.\nIl manque encore ${missingItems} montant(s).`;
 
       if (hasMoreDocuments) {
         message += '\n\nTu peux revenir en arrière pour consulter les documents précédents en cliquant sur OK.';
         alert(message);
         // Allow user to go back
+        this.render(); // Re-render to show skip button
         return;
       } else {
         message += '\n\nVérifie bien tous les documents pour trouver les montants manquants.';
         alert(message);
+        this.render(); // Re-render to show skip button
         return;
       }
     }
@@ -730,10 +753,18 @@ export class BudgetBoard {
     });
 
     if (validation.isCorrect) {
+      this.validationFailed = false;
       this.complete(validation);
     } else {
-      announce(`${validation.errors.length} erreurs trouvées. Corrige-les et valide à nouveau.`);
-      alert('Il y a des erreurs. Corrige les montants en rouge et valide à nouveau.');
+      this.validationFailed = true;
+      // Count errors in expense items only for better messaging
+      const expenseErrors = validation.errors.filter(err =>
+        err.type === 'sortie_fixe' || err.type === 'sortie_variable'
+      );
+
+      announce(`Certains postes comportent des erreurs. Vérifie les montants en rouge.`);
+      alert(`Certains postes comportent des erreurs.\n\nVérifie les montants en rouge avant de valider à nouveau.\n\nTu peux déplacer les montants pour les corriger.`);
+      this.render(); // Re-render to show skip button
     }
   }
 
@@ -752,19 +783,54 @@ export class BudgetBoard {
     this.emit('progress', progress);
   }
 
+  skipToPart3() {
+    // Allow user to skip to Part 3 even if validation failed
+    const confirmation = confirm('Souhaites-tu vraiment passer à la partie 3 ?\n\nTon budget actuel sera pris en compte pour le calcul du score, même s\'il contient des erreurs.');
+
+    if (confirmation) {
+      // Transform placedAmounts arrays to totals for validation
+      const placedAmountsForValidation = {};
+      Object.entries(this.placedAmounts).forEach(([rubrique, amounts]) => {
+        if (Array.isArray(amounts) && amounts.length > 0) {
+          placedAmountsForValidation[rubrique] = amounts.reduce((sum, amountObj) => sum + amountObj.value, 0);
+        }
+      });
+
+      const validation = this.validationService.validateBudget(placedAmountsForValidation, this.budgetData);
+
+      const correctItems = Object.values(validation.items).filter(i => i.isValid).length;
+      const totalItems = Object.keys(validation.items).length;
+
+      this.score = this.scoringService.calculatePart2Score(
+        correctItems,
+        totalItems,
+        validation.totals.solde.isCorrect
+      );
+
+      announce(`Passage à la partie 3. Score: ${this.score} sur 40`);
+      alert(`Passage à la partie 3...\n\nScore obtenu: ${this.score}/40`);
+
+      this.emit('complete', this.score);
+    }
+  }
+
   complete(validation) {
     const correctItems = Object.values(validation.items).filter(i => i.isValid).length;
     const totalItems = Object.keys(validation.items).length;
-    
+
+    // Count only expense items for display
+    const expenseItems = [...this.budgetData.sorties_fixes, ...this.budgetData.sorties_variables];
+    const totalExpenseItems = expenseItems.length; // 13 items
+
     this.score = this.scoringService.calculatePart2Score(
       correctItems,
       totalItems,
       validation.totals.solde.isCorrect
     );
-    
+
     announce(`Partie 2 terminée ! Score: ${this.score} sur 40`);
-    alert(`Bravo ! Ton budget est correct.\nScore: ${this.score}/40\nPassage à la partie 3...`);
-    
+    alert(`Félicitations ! Tu as complété le budget correctement (${totalExpenseItems}/${totalExpenseItems} postes de dépenses).\n\nScore: ${this.score}/40\n\nPassage à la partie 3...`);
+
     this.emit('complete', this.score);
   }
 
@@ -775,6 +841,8 @@ export class BudgetBoard {
     this.isValidated = false;
     this.availableAmounts = [];
     this.usedAmountIds = new Set();
+    this.hasAttemptedValidation = false;
+    this.validationFailed = false;
     this.render();
   }
 
