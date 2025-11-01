@@ -22,6 +22,7 @@ export class BudgetBoard {
     this.isValidated = false;
     this.availableAmounts = []; // Track available amounts in the center zone
     this.autoValidateTimeout = null; // Track auto-validation timeout
+    this.usedAmountIds = new Set(); // Track unique IDs of used amounts to prevent reuse
   }
 
   async init() {
@@ -100,9 +101,16 @@ export class BudgetBoard {
       const preview = this.createDocumentPreviewLarge(currentDoc);
       gallery.appendChild(preview);
 
-      // Update available amounts for the center zone
+      // Update available amounts for the center zone - filter out already used amounts
       if (currentDoc.montants && currentDoc.montants.length > 0) {
-        this.availableAmounts = [...currentDoc.montants];
+        this.availableAmounts = currentDoc.montants
+          .map((montant, index) => ({
+            id: `${currentDoc.id}-${index}`,
+            value: montant,
+            docId: currentDoc.id,
+            index: index
+          }))
+          .filter(amount => !this.usedAmountIds.has(amount.id));
       } else {
         this.availableAmounts = [];
       }
@@ -155,23 +163,25 @@ export class BudgetBoard {
     });
 
     // Display available amounts
-    this.availableAmounts.forEach((montant, index) => {
+    this.availableAmounts.forEach((amountObj, index) => {
       const dragAmount = createElement('div', {
         className: 'draggable-amount',
         draggable: 'true',
         dataset: {
-          amount: String(montant),
-          amountIndex: String(index)
+          amount: String(amountObj.value),
+          amountIndex: String(index),
+          amountId: amountObj.id
         },
         ondragstart: (e) => {
-          e.dataTransfer.setData('amount', String(montant));
+          e.dataTransfer.setData('amount', String(amountObj.value));
           e.dataTransfer.setData('amountIndex', String(index));
+          e.dataTransfer.setData('amountId', amountObj.id);
           e.target.classList.add('dragging');
         },
         ondragend: (e) => {
           e.target.classList.remove('dragging');
         }
-      }, formatEuro(montant));
+      }, formatEuro(amountObj.value));
       amountsContainer.appendChild(dragAmount);
     });
 
@@ -181,14 +191,43 @@ export class BudgetBoard {
       e.preventDefault();
       // Allow amounts to be returned to the source zone
       const amountData = e.dataTransfer.getData('amount');
+      const amountId = e.dataTransfer.getData('amountId');
+      const fromRubrique = e.dataTransfer.getData('rubrique');
+      const fromPlaced = e.dataTransfer.getData('fromPlaced') === 'true';
       const amount = parseFloat(amountData);
 
-      if (!isNaN(amount)) {
-        // Add amount back to available amounts if not already there
-        if (!this.availableAmounts.includes(amount)) {
-          this.availableAmounts.push(amount);
-          this.render();
+      if (!isNaN(amount) && amountId) {
+        // Remove from used IDs to allow reuse
+        this.usedAmountIds.delete(amountId);
+
+        // If coming from a placed cell, remove it from there
+        if (fromPlaced && fromRubrique) {
+          const placedAmounts = this.placedAmounts[fromRubrique];
+          if (placedAmounts) {
+            const index = placedAmounts.findIndex(a => a.id === amountId);
+            if (index > -1) {
+              placedAmounts.splice(index, 1);
+              if (placedAmounts.length === 0) {
+                delete this.placedAmounts[fromRubrique];
+              }
+            }
+          }
         }
+
+        // Add amount back to available amounts if not already there
+        const alreadyAvailable = this.availableAmounts.some(a => a.id === amountId);
+        if (!alreadyAvailable) {
+          const [docId, indexStr] = amountId.split('-');
+          this.availableAmounts.push({
+            id: amountId,
+            value: amount,
+            docId: docId,
+            index: parseInt(indexStr)
+          });
+        }
+
+        this.updateTotals();
+        this.render();
       }
     };
 
@@ -223,22 +262,37 @@ export class BudgetBoard {
   createBudgetTable() {
     const container = createElement('div', { className: 'budget-table-container' });
 
-    // Create header with title and navigation button
+    // Create header with title and navigation/validation buttons
     const header = createElement('div', { className: 'budget-table-header' });
     const title = createElement('h3', {}, 'Budget du mois - Septembre');
     header.appendChild(title);
 
+    const buttonsContainer = createElement('div', { className: 'document-nav-buttons' });
+
+    // Add validation button if all documents are processed
+    if (this.currentDocumentIndex >= this.documents.length) {
+      const validateAllBtn = createElement('button', {
+        className: 'btn btn-success',
+        onclick: () => this.validateFinal()
+      }, 'Valider le budget complet');
+      buttonsContainer.appendChild(validateAllBtn);
+
+      const printBtn = createElement('button', {
+        className: 'btn btn-secondary btn-small',
+        onclick: () => window.print()
+      }, '🖨 Imprimer');
+      buttonsContainer.appendChild(printBtn);
+    }
+
     // Add navigation buttons
     if (this.currentDocumentIndex < this.documents.length || this.currentDocumentIndex > 0) {
-      const navButtons = createElement('div', { className: 'document-nav-buttons' });
-
       // Previous document button
       if (this.currentDocumentIndex > 0) {
         const prevBtn = createElement('button', {
           className: 'btn btn-secondary btn-small',
           onclick: () => this.previousDocument()
         }, '← Document précédent');
-        navButtons.appendChild(prevBtn);
+        buttonsContainer.appendChild(prevBtn);
       }
 
       // Next document button
@@ -247,10 +301,12 @@ export class BudgetBoard {
           className: 'btn btn-secondary btn-small',
           onclick: () => this.skipDocument()
         }, 'Document suivant →');
-        navButtons.appendChild(nextBtn);
+        buttonsContainer.appendChild(nextBtn);
       }
+    }
 
-      header.appendChild(navButtons);
+    if (buttonsContainer.children.length > 0) {
+      header.appendChild(buttonsContainer);
     }
 
     container.appendChild(header);
@@ -309,26 +365,43 @@ export class BudgetBoard {
       ondragleave: (e) => this.handleDragLeave(e)
     });
 
-    // Restore previously placed amount if exists
-    if (this.placedAmounts[item.libelle]) {
-      const amount = this.placedAmounts[item.libelle];
-      const amountEl = createElement('div', {
-        className: 'draggable-amount',
-        draggable: 'true',
-        dataset: {
-          amount: String(amount),
-          amountIndex: ''
-        },
-        ondragstart: (ev) => {
-          ev.dataTransfer.setData('amount', String(amount));
-          ev.dataTransfer.setData('fromPlaced', 'true');
-          ev.dataTransfer.setData('rubrique', item.libelle);
-          ev.target.classList.add('dragging');
-        },
-        ondragend: (ev) => ev.target.classList.remove('dragging')
-      }, formatEuro(amount));
+    // Restore previously placed amounts if exist (now supports multiple amounts)
+    const placedAmounts = this.placedAmounts[item.libelle];
+    if (placedAmounts && placedAmounts.length > 0) {
+      const amountsWrapper = createElement('div', { className: 'amounts-stack' });
 
-      dropZone.appendChild(amountEl);
+      placedAmounts.forEach((amountObj) => {
+        const amountEl = createElement('div', {
+          className: 'draggable-amount amount-badge',
+          draggable: 'true',
+          dataset: {
+            amount: String(amountObj.value),
+            amountId: amountObj.id,
+            amountIndex: ''
+          },
+          ondragstart: (ev) => {
+            ev.dataTransfer.setData('amount', String(amountObj.value));
+            ev.dataTransfer.setData('amountId', amountObj.id);
+            ev.dataTransfer.setData('fromPlaced', 'true');
+            ev.dataTransfer.setData('rubrique', item.libelle);
+            ev.target.classList.add('dragging');
+          },
+          ondragend: (ev) => ev.target.classList.remove('dragging')
+        }, formatEuro(amountObj.value));
+
+        amountsWrapper.appendChild(amountEl);
+      });
+
+      // Show total if multiple amounts
+      if (placedAmounts.length > 1) {
+        const total = placedAmounts.reduce((sum, a) => sum + a.value, 0);
+        const totalEl = createElement('div', {
+          className: 'amounts-total'
+        }, `Total: ${formatEuro(total)}`);
+        amountsWrapper.appendChild(totalEl);
+      }
+
+      dropZone.appendChild(amountsWrapper);
       dropZone.classList.add('filled');
     }
 
@@ -357,28 +430,15 @@ export class BudgetBoard {
   createActions() {
     const actions = createElement('div', { className: 'nav-buttons mt-xl' });
 
-    // Show different actions based on progress
+    // Show auto-validation message while processing documents
     if (this.currentDocumentIndex < this.documents.length) {
-      // Auto-validation message
       const autoValidateMsg = createElement('p', {
         className: 'text-secondary text-center',
         id: 'auto-validate-message'
       }, 'Place les montants dans le tableau. La validation se fera automatiquement.');
       actions.appendChild(autoValidateMsg);
-    } else {
-      // Final validation button
-      const validateAllBtn = createElement('button', {
-        className: 'btn btn-success btn-large',
-        onclick: () => this.validateFinal()
-      }, 'Valider le budget complet');
-      actions.appendChild(validateAllBtn);
-
-      const printBtn = createElement('button', {
-        className: 'btn btn-secondary print-button',
-        onclick: () => window.print()
-      }, '🖨 Imprimer');
-      actions.appendChild(printBtn);
     }
+    // Note: Validation button is now in the budget table header
 
     return actions;
   }
@@ -397,7 +457,7 @@ export class BudgetBoard {
     e.currentTarget.classList.remove('drag-over');
 
     const amountData = e.dataTransfer.getData('amount');
-    const amountIndex = e.dataTransfer.getData('amountIndex');
+    const amountId = e.dataTransfer.getData('amountId');
     const amount = parseFloat(amountData);
 
     // Validation: vérifier que le montant est un nombre valide
@@ -416,67 +476,61 @@ export class BudgetBoard {
       return;
     }
 
-    // Check if this rubrique already has an amount and warn the user
-    if (this.placedAmounts[item.libelle] && !fromPlaced) {
-      // Show warning message
-      announce(`⚠️ Ce poste "${item.libelle}" est déjà rempli. Glisse le montant existant ailleurs d'abord.`);
+    // Initialize array for this rubrique if it doesn't exist
+    if (!this.placedAmounts[item.libelle]) {
+      this.placedAmounts[item.libelle] = [];
+    }
 
-      // Flash the drop zone to show it's already filled
+    // Check if this rubrique already has 3 amounts (maximum)
+    if (this.placedAmounts[item.libelle].length >= 3 && !fromPlaced) {
+      announce(`⚠️ Capacité atteinte : maximum 3 montants pour "${item.libelle}".`);
       dropZone.classList.add('error');
       setTimeout(() => {
         dropZone.classList.remove('error');
-        if (this.placedAmounts[item.libelle]) {
-          dropZone.classList.add('filled');
-        }
+        dropZone.classList.add('filled');
       }, 1000);
       return;
     }
 
-    // If there's already an amount in this target cell, return it to available amounts
-    if (this.placedAmounts[item.libelle]) {
-      const previousAmount = this.placedAmounts[item.libelle];
-      // Only add back if it's not already in available amounts
-      if (!this.availableAmounts.includes(previousAmount)) {
-        this.availableAmounts.push(previousAmount);
-      }
+    // Check if this amount ID is already used (prevent duplicates)
+    if (amountId && this.usedAmountIds.has(amountId) && !fromPlaced) {
+      announce(`⚠️ Ce montant a déjà été utilisé.`);
+      return;
     }
 
     // Remove the amount from its previous location
     if (fromPlaced && fromRubrique && fromRubrique !== item.libelle) {
       // Moving from one budget cell to another
-      delete this.placedAmounts[fromRubrique];
+      const previousAmounts = this.placedAmounts[fromRubrique];
+      if (previousAmounts) {
+        const index = previousAmounts.findIndex(a => a.id === amountId);
+        if (index > -1) {
+          previousAmounts.splice(index, 1);
+          if (previousAmounts.length === 0) {
+            delete this.placedAmounts[fromRubrique];
+          }
+        }
+      }
     } else if (!fromPlaced) {
       // Coming from available amounts - remove it from there
-      const index = this.availableAmounts.indexOf(amount);
+      const index = this.availableAmounts.findIndex(a => a.id === amountId);
       if (index > -1) {
         this.availableAmounts.splice(index, 1);
       }
     }
 
-    // Place the amount in the new cell
-    dropZone.innerHTML = '';
-    const amountEl = createElement('div', {
-      className: 'draggable-amount',
-      draggable: 'true',
-      dataset: {
-        amount: String(amount),
-        amountIndex: ''
-      },
-      ondragstart: (ev) => {
-        ev.dataTransfer.setData('amount', String(amount));
-        ev.dataTransfer.setData('fromPlaced', 'true');
-        ev.dataTransfer.setData('rubrique', item.libelle);
-        ev.target.classList.add('dragging');
-      },
-      ondragend: (ev) => {
-        ev.target.classList.remove('dragging');
-      }
-    }, formatEuro(amount));
+    // Add the amount to the new cell
+    const amountObj = {
+      value: amount,
+      id: amountId || `manual-${Date.now()}-${Math.random()}`
+    };
 
-    dropZone.appendChild(amountEl);
-    dropZone.classList.add('filled');
+    this.placedAmounts[item.libelle].push(amountObj);
 
-    this.placedAmounts[item.libelle] = amount;
+    // Mark this amount ID as used
+    if (amountId) {
+      this.usedAmountIds.add(amountId);
+    }
 
     this.updateTotals();
     this.render();
@@ -524,30 +578,30 @@ export class BudgetBoard {
   updateTotals() {
     let totalEntrees = 0;
     let totalSorties = 0;
-    
+
     this.budgetData.entrees.forEach(item => {
-      if (this.placedAmounts[item.libelle]) {
-        totalEntrees += this.placedAmounts[item.libelle];
+      if (this.placedAmounts[item.libelle] && Array.isArray(this.placedAmounts[item.libelle])) {
+        totalEntrees += this.placedAmounts[item.libelle].reduce((sum, amountObj) => sum + amountObj.value, 0);
       }
     });
-    
+
     [...this.budgetData.sorties_fixes, ...this.budgetData.sorties_variables].forEach(item => {
-      if (this.placedAmounts[item.libelle]) {
-        totalSorties += this.placedAmounts[item.libelle];
+      if (this.placedAmounts[item.libelle] && Array.isArray(this.placedAmounts[item.libelle])) {
+        totalSorties += this.placedAmounts[item.libelle].reduce((sum, amountObj) => sum + amountObj.value, 0);
       }
     });
-    
+
     const solde = totalEntrees - totalSorties;
-    
+
     const entreesEl = document.getElementById('total-entrees');
     const sortiesEl = document.getElementById('total-sorties');
     const soldeEl = document.getElementById('balance');
     const balanceRow = document.getElementById('balance-row');
-    
+
     if (entreesEl) entreesEl.textContent = formatEuro(totalEntrees);
     if (sortiesEl) sortiesEl.textContent = formatEuro(totalSorties);
     if (soldeEl) soldeEl.textContent = formatEuro(solde);
-    
+
     if (balanceRow) {
       balanceRow.classList.remove('positive', 'negative');
       balanceRow.classList.add(solde >= 0 ? 'positive' : 'negative');
@@ -627,14 +681,22 @@ export class BudgetBoard {
   }
 
   validateFinal() {
-    const validation = this.validationService.validateBudget(this.placedAmounts, this.budgetData);
+    // Transform placedAmounts arrays to totals for validation
+    const placedAmountsForValidation = {};
+    Object.entries(this.placedAmounts).forEach(([rubrique, amounts]) => {
+      if (Array.isArray(amounts) && amounts.length > 0) {
+        placedAmountsForValidation[rubrique] = amounts.reduce((sum, amountObj) => sum + amountObj.value, 0);
+      }
+    });
+
+    const validation = this.validationService.validateBudget(placedAmountsForValidation, this.budgetData);
 
     if (!validation.isComplete) {
       announce('Budget incomplet. Complète toutes les rubriques.');
 
       // Count missing items
       const totalItems = [...this.budgetData.entrees, ...this.budgetData.sorties_fixes, ...this.budgetData.sorties_variables].length;
-      const placedItems = Object.keys(this.placedAmounts).length;
+      const placedItems = Object.keys(this.placedAmounts).filter(key => this.placedAmounts[key].length > 0).length;
       const missingItems = totalItems - placedItems;
 
       // Check if there are still documents to process
@@ -712,6 +774,7 @@ export class BudgetBoard {
     this.validatedDocuments = new Set();
     this.isValidated = false;
     this.availableAmounts = [];
+    this.usedAmountIds = new Set();
     this.render();
   }
 
