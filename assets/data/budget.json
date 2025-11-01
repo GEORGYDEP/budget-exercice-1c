@@ -10,7 +10,7 @@
       "type": "allocation",
       "libelle": "Chômage de Julie",
       "montantAttendu": 352.52,
-      "sourceDocId": "chomage"
+      "sourceDocId": "extrait-bancaire"
     }
   ],
   "sorties_fixes": [
@@ -66,7 +66,7 @@
     },
     {
       "type": "variable",
-      "libelle": "IKEA",
+      "libelle": "Meubles et aménagements",
       "montantAttendu": 35.5,
       "sourceDocId": "ikea"
     },
