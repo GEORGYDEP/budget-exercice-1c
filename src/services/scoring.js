@@ -4,26 +4,27 @@
 
 export class ScoringService {
   constructor() {
-    // Pondération des parties
+    // Nouvelle pondération des parties (total /40)
     this.weights = {
-      part1: 30, // Quiz documents
-      part2: 40, // Budget
-      part3: 30  // Quiz final
+      part1: 10, // Quiz documents (10 questions)
+      part2: 20, // Dépenses
+      part3: 5,  // Revenus
+      part4: 5   // Quiz final (5 questions)
     };
   }
 
   /**
-   * Calcule le score total sur 100
+   * Calcule le score total sur 40
    */
-  calculateTotalScore(part1Score, part2Score, part3Score) {
-    return Math.round(part1Score + part2Score + part3Score);
+  calculateTotalScore(part1Score, part2Score, part3Score, part4Score) {
+    return Math.round(part1Score + part2Score + part3Score + part4Score);
   }
 
   /**
    * Calcule le score pour la partie 1 (Quiz documents)
    * @param {number} correctAnswers - Nombre de réponses correctes
    * @param {number} totalQuestions - Nombre total de questions
-   * @returns {number} Score sur 30
+   * @returns {number} Score sur 10
    */
   calculatePart1Score(correctAnswers, totalQuestions) {
     if (totalQuestions === 0) return 0;
@@ -31,44 +32,57 @@ export class ScoringService {
   }
 
   /**
-   * Calcule le score pour la partie 2 (Budget)
+   * Calcule le score pour la partie 2 (Dépenses)
    * @param {number} correctItems - Nombre de montants corrects
    * @param {number} totalItems - Nombre total de rubriques
-   * @param {boolean} balanceCorrect - Le solde est-il correct
-   * @returns {number} Score sur 40
+   * @param {boolean} balanceCorrect - Le solde est-il correct (optionnel)
+   * @returns {number} Score sur 20
    */
   calculatePart2Score(correctItems, totalItems, balanceCorrect = true) {
     if (totalItems === 0) return 0;
-    
-    // 35 points pour les rubriques, 5 points pour le solde correct
-    const itemsScore = (correctItems / totalItems) * 35;
-    const balanceScore = balanceCorrect ? 5 : 0;
-    
+
+    // 18 points pour les rubriques, 2 points bonus pour le solde correct
+    const itemsScore = (correctItems / totalItems) * 18;
+    const balanceScore = balanceCorrect ? 2 : 0;
+
     return Math.round(itemsScore + balanceScore);
   }
 
   /**
-   * Calcule le score pour la partie 3 (Quiz final)
-   * @param {number} correctAnswers - Nombre de réponses correctes
-   * @param {number} totalQuestions - Nombre total de questions
-   * @returns {number} Score sur 30
+   * Calcule le score pour la partie 3 (Revenus)
+   * @param {number} correctItems - Nombre de revenus corrects
+   * @param {number} totalItems - Nombre total de revenus (normalement 2)
+   * @returns {number} Score sur 5
    */
-  calculatePart3Score(correctAnswers, totalQuestions) {
-    if (totalQuestions === 0) return 0;
-    return Math.round((correctAnswers / totalQuestions) * this.weights.part3);
+  calculatePart3Score(correctItems, totalItems) {
+    if (totalItems === 0) return 0;
+    return Math.round((correctItems / totalItems) * this.weights.part3);
   }
 
   /**
-   * Retourne un message basé sur le score total
+   * Calcule le score pour la partie 4 (Quiz final)
+   * @param {number} correctAnswers - Nombre de réponses correctes
+   * @param {number} totalQuestions - Nombre total de questions
+   * @returns {number} Score sur 5
+   */
+  calculatePart4Score(correctAnswers, totalQuestions) {
+    if (totalQuestions === 0) return 0;
+    return Math.round((correctAnswers / totalQuestions) * this.weights.part4);
+  }
+
+  /**
+   * Retourne un message basé sur le score total (sur 40)
    */
   getScoreMessage(totalScore) {
-    if (totalScore >= 90) {
+    const percentage = (totalScore / 40) * 100;
+
+    if (percentage >= 90) {
       return 'Excellent ! Tu as une maîtrise exceptionnelle de la gestion budgétaire.';
-    } else if (totalScore >= 75) {
+    } else if (percentage >= 75) {
       return 'Très bien ! Tu comprends bien les principes de gestion d\'un budget.';
-    } else if (totalScore >= 60) {
+    } else if (percentage >= 60) {
       return 'Bien ! Continue à t\'entraîner pour améliorer tes compétences.';
-    } else if (totalScore >= 50) {
+    } else if (percentage >= 50) {
       return 'Pas mal ! Avec un peu plus de pratique, tu vas progresser.';
     } else {
       return 'Continue à apprendre ! La gestion budgétaire demande de la pratique.';
@@ -78,11 +92,13 @@ export class ScoringService {
   /**
    * Retourne une note basée sur le score (A, B, C, D, E)
    */
-  getGrade(score) {
-    if (score >= 90) return 'A';
-    if (score >= 75) return 'B';
-    if (score >= 60) return 'C';
-    if (score >= 50) return 'D';
+  getGrade(score, maxScore = 40) {
+    const percentage = (score / maxScore) * 100;
+
+    if (percentage >= 90) return 'A';
+    if (percentage >= 75) return 'B';
+    if (percentage >= 60) return 'C';
+    if (percentage >= 50) return 'D';
     return 'E';
   }
 
@@ -98,14 +114,14 @@ export class ScoringService {
    * Génère des statistiques détaillées
    */
   generateStats(scores) {
-    const { part1, part2, part3, total } = scores;
-    
+    const { part1, part2, part3, part4, total } = scores;
+
     return {
       total: {
         score: total,
-        maxScore: 100,
-        percentage: this.calculatePercentage(total, 100),
-        grade: this.getGrade(total)
+        maxScore: 40,
+        percentage: this.calculatePercentage(total, 40),
+        grade: this.getGrade(total, 40)
       },
       parts: {
         documents: {
@@ -113,15 +129,20 @@ export class ScoringService {
           maxScore: this.weights.part1,
           percentage: this.calculatePercentage(part1, this.weights.part1)
         },
-        budget: {
+        depenses: {
           score: part2,
           maxScore: this.weights.part2,
           percentage: this.calculatePercentage(part2, this.weights.part2)
         },
-        quiz: {
+        revenus: {
           score: part3,
           maxScore: this.weights.part3,
           percentage: this.calculatePercentage(part3, this.weights.part3)
+        },
+        quiz: {
+          score: part4,
+          maxScore: this.weights.part4,
+          percentage: this.calculatePercentage(part4, this.weights.part4)
         }
       },
       strengths: this.identifyStrengths(scores),
@@ -134,18 +155,21 @@ export class ScoringService {
    */
   identifyStrengths(scores) {
     const strengths = [];
-    const { part1, part2, part3 } = scores;
-    
+    const { part1, part2, part3, part4 } = scores;
+
     if (this.calculatePercentage(part1, this.weights.part1) >= 80) {
       strengths.push('Identification des documents');
     }
     if (this.calculatePercentage(part2, this.weights.part2) >= 80) {
-      strengths.push('Gestion du budget');
+      strengths.push('Gestion des dépenses');
     }
     if (this.calculatePercentage(part3, this.weights.part3) >= 80) {
+      strengths.push('Gestion des revenus');
+    }
+    if (this.calculatePercentage(part4, this.weights.part4) >= 80) {
       strengths.push('Compréhension globale');
     }
-    
+
     return strengths;
   }
 
@@ -154,18 +178,21 @@ export class ScoringService {
    */
   identifyWeaknesses(scores) {
     const weaknesses = [];
-    const { part1, part2, part3 } = scores;
-    
+    const { part1, part2, part3, part4 } = scores;
+
     if (this.calculatePercentage(part1, this.weights.part1) < 60) {
       weaknesses.push('Identification des documents');
     }
     if (this.calculatePercentage(part2, this.weights.part2) < 60) {
-      weaknesses.push('Gestion du budget');
+      weaknesses.push('Gestion des dépenses');
     }
     if (this.calculatePercentage(part3, this.weights.part3) < 60) {
+      weaknesses.push('Gestion des revenus');
+    }
+    if (this.calculatePercentage(part4, this.weights.part4) < 60) {
       weaknesses.push('Compréhension globale');
     }
-    
+
     return weaknesses;
   }
 }

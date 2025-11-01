@@ -1,0 +1,456 @@
+/**
+ * Styles pour les nouveaux composants (EmailGate, RevenueBoard, FinalSynthesis, ResultsSheet)
+ */
+
+/* ===== Email Gate ===== */
+.email-gate-card {
+  max-width: 600px;
+  margin: 4rem auto;
+  text-align: center;
+}
+
+.email-gate-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+}
+
+.email-gate-subtitle {
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+}
+
+.email-gate-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.form-label {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.form-input {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input.input-error {
+  border-color: var(--color-error);
+}
+
+.form-hint {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.form-error {
+  font-size: 0.875rem;
+  color: var(--color-error);
+  font-weight: 500;
+  min-height: 1.5rem;
+}
+
+/* ===== User Name Display ===== */
+.user-name-display {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  padding: 0.5rem 1rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+}
+
+.app-title-section h1 {
+  margin: 0;
+}
+
+.app-title-section .subtitle {
+  margin: 0.25rem 0 0 0;
+}
+
+/* ===== Revenue Board ===== */
+.revenue-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.revenue-instructions {
+  background: var(--color-surface);
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  border-left: 4px solid var(--color-primary);
+}
+
+.revenue-instructions h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--color-primary);
+}
+
+.revenue-content-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .revenue-content-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Final Synthesis ===== */
+.final-synthesis-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.final-budget-sticky {
+  position: sticky;
+  top: 1rem;
+  background: var(--color-background);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-lg);
+  z-index: 10;
+}
+
+.final-budget-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.final-budget-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--color-primary);
+  font-size: 1.5rem;
+}
+
+.final-budget-tables {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .final-budget-tables {
+    grid-template-columns: 1fr;
+  }
+}
+
+.final-budget-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.final-table-container {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.final-table-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-align: center;
+}
+
+.final-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.final-table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.final-table-label {
+  padding: 0.5rem;
+  text-align: left;
+  font-size: 0.9375rem;
+}
+
+.final-table-amount {
+  padding: 0.5rem;
+  text-align: right;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.final-table-section td {
+  background: var(--color-surface-dark);
+  font-weight: 600;
+  color: var(--color-primary);
+  padding: 0.5rem;
+}
+
+.final-table-total td {
+  border-top: 2px solid var(--color-primary);
+  padding: 0.75rem 0.5rem;
+  font-weight: 700;
+  font-size: 1.0625rem;
+}
+
+.final-budget-summary {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.final-summary-item {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.final-summary-solde {
+  font-size: 1.125rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+}
+
+.final-summary-solde.positive {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--color-success);
+}
+
+.final-summary-solde.negative {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+}
+
+.final-questions-section {
+  margin-top: 2rem;
+}
+
+/* ===== Results Sheet ===== */
+.results-sheet {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.results-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 3px solid var(--color-primary);
+}
+
+.results-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.results-subtitle {
+  font-size: 1.125rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.results-student-info {
+  margin-bottom: 2rem;
+}
+
+.results-section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-border);
+}
+
+.results-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.results-info-row {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+@media (max-width: 640px) {
+  .results-info-row {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+}
+
+.results-info-label {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.results-info-value {
+  color: var(--color-text);
+}
+
+.results-scores {
+  margin-bottom: 2rem;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.results-table thead {
+  background: var(--color-surface-dark);
+}
+
+.results-table th {
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-primary);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.results-table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.results-table td {
+  padding: 0.75rem;
+}
+
+.results-part-number {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.results-score-cell {
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  font-size: 1.125rem;
+  text-align: right;
+}
+
+.results-total {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  text-align: center;
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: 2rem;
+}
+
+.results-total-label {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  opacity: 0.9;
+}
+
+.results-total-score {
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.results-percentage {
+  font-size: 1.5rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.results-message {
+  text-align: center;
+  padding: 1.5rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  margin-bottom: 2rem;
+}
+
+.results-message-text {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.results-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.results-footer {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.results-footer-text {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Print styles for results */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .results-sheet {
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .results-actions {
+    display: none;
+  }
+
+  .btn {
+    display: none;
+  }
+}
