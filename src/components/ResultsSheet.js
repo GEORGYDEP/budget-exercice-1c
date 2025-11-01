@@ -165,11 +165,11 @@ export class ResultsSheet {
     section.appendChild(totalLabel);
 
     const totalScore = createElement('div', { className: 'results-total-score' },
-      `${this.scores.total} / 80`);
+      `${this.scores.total} / 65`);
     section.appendChild(totalScore);
 
     // Percentage
-    const percentage = Math.round((this.scores.total / 80) * 100);
+    const percentage = Math.round((this.scores.total / 65) * 100);
     const percentageEl = createElement('div', { className: 'results-percentage' },
       `${percentage}%`);
     section.appendChild(percentageEl);

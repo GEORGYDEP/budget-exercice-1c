@@ -4,18 +4,19 @@
 
 export class ScoringService {
   constructor() {
-    // Nouvelle pondération des parties (total /80)
-    // Chaque partie est notée sur 20 points
+    // Nouvelle pondération des parties (total /65)
+    // Part 3 est notée en binaire (5 ou 0)
     this.weights = {
       part1: 20, // Quiz documents (10 questions)
       part2: 20, // Dépenses (13 montants)
-      part3: 20, // Revenus (2 montants)
+      part3: 5,  // Revenus (2 montants) - Notation binaire
       part4: 20  // Quiz final (questions de synthèse)
     };
   }
 
   /**
-   * Calcule le score total sur 80 (4 parties × 20 points)
+   * Calcule le score total sur 65
+   * (Part 1: 20 + Part 2: 20 + Part 3: 5 + Part 4: 20)
    */
   calculateTotalScore(part1Score, part2Score, part3Score, part4Score) {
     // Return with 1 decimal place
@@ -51,14 +52,14 @@ export class ScoringService {
 
   /**
    * Calcule le score pour la partie 3 (Revenus)
+   * Notation binaire : 5 points si tout est correct, 0 sinon
    * @param {number} correctItems - Nombre de revenus corrects
    * @param {number} totalItems - Nombre total de revenus (2)
-   * @returns {number} Score sur 20 (avec 1 décimale)
+   * @returns {number} Score sur 5 (binaire: 5 ou 0)
    */
   calculatePart3Score(correctItems, totalItems = 2) {
-    if (totalItems === 0) return 0;
-    const score = (correctItems / totalItems) * this.weights.part3;
-    return parseFloat(score.toFixed(1));
+    // Scoring binaire : tout correct = 5 points, sinon 0
+    return (correctItems === totalItems) ? this.weights.part3 : 0;
   }
 
   /**
@@ -74,10 +75,10 @@ export class ScoringService {
   }
 
   /**
-   * Retourne un message basé sur le score total (sur 80)
+   * Retourne un message basé sur le score total (sur 65)
    */
   getScoreMessage(totalScore) {
-    const percentage = (totalScore / 80) * 100;
+    const percentage = (totalScore / 65) * 100;
 
     if (percentage >= 90) {
       return 'Excellent ! Tu as une maîtrise exceptionnelle de la gestion budgétaire.';
@@ -122,9 +123,9 @@ export class ScoringService {
     return {
       total: {
         score: total,
-        maxScore: 80,
-        percentage: this.calculatePercentage(total, 80),
-        grade: this.getGrade(total, 80)
+        maxScore: 65,
+        percentage: this.calculatePercentage(total, 65),
+        grade: this.getGrade(total, 65)
       },
       parts: {
         documents: {

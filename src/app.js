@@ -294,7 +294,7 @@ export class App {
         restartBtn.style.display = 'inline-flex';
       }
 
-      announce(`Résultats finaux : Score total ${this.scores.total} sur 80`);
+      announce(`Résultats finaux : Score total ${this.scores.total} sur 65`);
     }
 
     // Mark as completed (part 5)
