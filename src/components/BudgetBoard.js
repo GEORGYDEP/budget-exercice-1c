@@ -807,8 +807,8 @@ export class BudgetBoard {
         validation.totals.solde.isCorrect
       );
 
-      announce(`Passage à la partie 3. Score: ${this.score} sur 40`);
-      alert(`Passage à la partie 3...\n\nScore obtenu: ${this.score}/40`);
+      announce(`Passage à la partie 3. Score: ${this.score} sur 20`);
+      alert(`Passage à la partie 3...\n\nScore obtenu: ${this.score}/20`);
 
       this.emit('complete', this.score);
     }
@@ -828,8 +828,8 @@ export class BudgetBoard {
       validation.totals.solde.isCorrect
     );
 
-    announce(`Partie 2 terminée ! Score: ${this.score} sur 40`);
-    alert(`Félicitations ! Tu as complété le budget correctement (${totalExpenseItems}/${totalExpenseItems} postes de dépenses).\n\nScore: ${this.score}/40\n\nPassage à la partie 3...`);
+    announce(`Partie 2 terminée ! Score: ${this.score} sur 20`);
+    alert(`Félicitations ! Tu as complété le budget correctement (${totalExpenseItems}/${totalExpenseItems} postes de dépenses).\n\nScore: ${this.score}/20\n\nPassage à la partie 3...`);
 
     this.emit('complete', this.score);
   }

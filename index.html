@@ -8,46 +8,62 @@
     <link rel="stylesheet" href="./src/ui/theme.css">
     <link rel="stylesheet" href="./src/ui/layout.css">
     <link rel="stylesheet" href="./src/ui/components.css">
+    <link rel="stylesheet" href="./src/ui/new-components.css">
     <link rel="stylesheet" href="./src/ui/print.css" media="print">
 </head>
 <body>
     <div id="app">
         <header class="app-header">
             <div class="app-header-left">
-                <h1>Budget du Ménage</h1>
-                <p class="subtitle">Apprends à gérer un budget avec Jules et Julie</p>
+                <div id="user-name-display" class="user-name-display" style="display: none;"></div>
+                <div class="app-title-section">
+                    <h1>Budget du Ménage</h1>
+                    <p class="subtitle">Apprends à gérer un budget avec Jules et Julie</p>
+                </div>
             </div>
-            <div class="progress-indicator" role="progressbar" aria-label="Progression du jeu">
+            <div class="progress-indicator" role="progressbar" aria-label="Progression du jeu" style="display: none;">
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: 0%"></div>
                 </div>
                 <div class="progress-text">
                     <span class="current-part">Partie 1</span>
-                    <span class="score">Score: <span id="total-score">0</span>/100</span>
+                    <span class="score">Score: <span id="total-score">0</span>/40</span>
                 </div>
             </div>
         </header>
 
         <main class="app-main" role="main">
+            <!-- Écran de saisie email -->
+            <section id="email-gate" class="game-part" aria-labelledby="email-gate-title">
+                <div id="email-gate-container"></div>
+            </section>
+
             <!-- Partie 1: Quiz Documents -->
-            <section id="part1" class="game-part active" aria-labelledby="part1-title">
+            <section id="part1" class="game-part" aria-labelledby="part1-title">
                 <h2 id="part1-title">Partie 1 : Identifier les documents</h2>
                 <p class="instructions">Observe chaque document et identifie de quel type il s'agit.</p>
                 <div id="doc-quiz-container"></div>
             </section>
 
-            <!-- Partie 2: Budget Board -->
+            <!-- Partie 2: Budget Board (Dépenses) -->
             <section id="part2" class="game-part" aria-labelledby="part2-title">
-                <h2 id="part2-title">Partie 2 : Compléter le budget</h2>
-                <p class="instructions">Glisse les montants des documents vers les bonnes rubriques du budget.</p>
+                <h2 id="part2-title">Partie 2 : Compléter le budget - Dépenses</h2>
+                <p class="instructions">Glisse les montants des documents vers les bonnes rubriques de dépenses du budget.</p>
                 <div id="budget-board-container"></div>
             </section>
 
-            <!-- Partie 3: Quiz Final -->
+            <!-- Partie 3: Revenue Board (Revenus) -->
             <section id="part3" class="game-part" aria-labelledby="part3-title">
-                <h2 id="part3-title">Partie 3 : Quiz de synthèse</h2>
-                <p class="instructions">Réponds aux questions pour vérifier ta compréhension.</p>
-                <div id="final-quiz-container"></div>
+                <h2 id="part3-title">Partie 3 : Compléter le budget - Revenus</h2>
+                <p class="instructions">Place maintenant les revenus du ménage dans le tableau des recettes.</p>
+                <div id="revenue-board-container"></div>
+            </section>
+
+            <!-- Partie 4: Final Synthesis (Tableau + Questions) -->
+            <section id="part4" class="game-part" aria-labelledby="part4-title">
+                <h2 id="part4-title">Partie 4 : Tableau et questions de synthèse</h2>
+                <p class="instructions">Consulte le tableau budgétaire corrigé ci-dessous pour répondre aux questions.</p>
+                <div id="final-synthesis-container"></div>
             </section>
 
             <!-- Écran de résultats -->
