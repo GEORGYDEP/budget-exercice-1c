@@ -275,11 +275,11 @@ export class FinalSynthesis {
     card.appendChild(createElement('p', { className: 'text-lg mb-md' },
       `Réponses correctes: ${correctAnswers}/${this.questions.length}`));
     card.appendChild(createElement('p', { className: 'text-xl font-bold' },
-      `Score: ${score}/5`));
+      `Score: ${score}/20`));
     card.appendChild(createElement('p', { className: 'text-secondary mt-md' },
       'Calcul des résultats finaux...'));
 
-    announce(`Partie 4 terminée. Score: ${score} sur 5`);
+    announce(`Partie 4 terminée. Score: ${score} sur 20`);
 
     // Emit complete event with score
     setTimeout(() => {

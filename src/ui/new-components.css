@@ -435,6 +435,35 @@
   margin: 0;
 }
 
+/* ===== Budget Section Styles ===== */
+.budget-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.validate-button-container {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-md);
+  background: var(--color-surface-light);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+}
+
+.btn-validate-budget {
+  font-size: var(--font-size-lg);
+  padding: var(--space-lg) var(--space-2xl);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--shadow-md);
+  min-width: 250px;
+}
+
+.btn-validate-budget:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+
 /* Print styles for results */
 @media print {
   .no-print {

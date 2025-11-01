@@ -125,7 +125,7 @@ export class ResultsSheet {
     part1Row.appendChild(createElement('td', { className: 'results-part-number' }, 'Partie 1'));
     part1Row.appendChild(createElement('td', {}, 'Quiz introductif (identification des documents)'));
     part1Row.appendChild(createElement('td', { className: 'results-score-cell' },
-      `${this.scores.part1} / 10`));
+      `${this.scores.part1} / 20`));
     tbody.appendChild(part1Row);
 
     // Part 2
@@ -141,7 +141,7 @@ export class ResultsSheet {
     part3Row.appendChild(createElement('td', { className: 'results-part-number' }, 'Partie 3'));
     part3Row.appendChild(createElement('td', {}, 'Revenus (placement des recettes)'));
     part3Row.appendChild(createElement('td', { className: 'results-score-cell' },
-      `${this.scores.part3} / 5`));
+      `${this.scores.part3} / 20`));
     tbody.appendChild(part3Row);
 
     // Part 4
@@ -149,7 +149,7 @@ export class ResultsSheet {
     part4Row.appendChild(createElement('td', { className: 'results-part-number' }, 'Partie 4'));
     part4Row.appendChild(createElement('td', {}, 'Quiz final (questions de synthèse)'));
     part4Row.appendChild(createElement('td', { className: 'results-score-cell' },
-      `${this.scores.part4} / 5`));
+      `${this.scores.part4} / 20`));
     tbody.appendChild(part4Row);
 
     table.appendChild(tbody);
@@ -165,11 +165,11 @@ export class ResultsSheet {
     section.appendChild(totalLabel);
 
     const totalScore = createElement('div', { className: 'results-total-score' },
-      `${this.scores.total} / 40`);
+      `${this.scores.total} / 80`);
     section.appendChild(totalScore);
 
     // Percentage
-    const percentage = Math.round((this.scores.total / 40) * 100);
+    const percentage = Math.round((this.scores.total / 80) * 100);
     const percentageEl = createElement('div', { className: 'results-percentage' },
       `${percentage}%`);
     section.appendChild(percentageEl);
@@ -188,7 +188,7 @@ export class ResultsSheet {
   }
 
   getEncouragementMessage(score) {
-    const percentage = (score / 40) * 100;
+    const percentage = (score / 80) * 100;
 
     if (percentage >= 90) {
       return "Excellent travail ! Tu maîtrises parfaitement la gestion d'un budget de ménage. Continue sur cette voie !";

@@ -294,7 +294,7 @@ export class App {
         restartBtn.style.display = 'inline-flex';
       }
 
-      announce(`Résultats finaux : Score total ${this.scores.total} sur 40`);
+      announce(`Résultats finaux : Score total ${this.scores.total} sur 80`);
     }
 
     // Mark as completed (part 5)
@@ -348,7 +348,7 @@ export class App {
 
     if (this.currentPart >= 1) {
       currentScore += this.scores.part1;
-      maxScore += 10;
+      maxScore += 20;
     }
     if (this.currentPart >= 2) {
       currentScore += this.scores.part2;
@@ -356,20 +356,22 @@ export class App {
     }
     if (this.currentPart >= 3) {
       currentScore += this.scores.part3;
-      maxScore += 5;
+      maxScore += 20;
     }
     if (this.currentPart >= 4) {
       currentScore += this.scores.part4;
-      maxScore += 5;
+      maxScore += 20;
     }
 
     if (this.currentPart === 5) {
       // Final results
       currentScore = this.scores.total;
-      maxScore = 40;
+      maxScore = 80;
     }
 
-    scoreDisplay.textContent = `${currentScore}/${maxScore}`;
+    // Format score with 1 decimal place
+    const formattedScore = typeof currentScore === 'number' ? currentScore.toFixed(1) : currentScore;
+    scoreDisplay.textContent = `${formattedScore}/${maxScore}`;
   }
 
   updatePart2Progress(progressData) {

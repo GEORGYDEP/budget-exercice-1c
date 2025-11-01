@@ -65,9 +65,23 @@ export class BudgetBoard {
     const amountsZone = this.createAmountsZone();
     layout.appendChild(amountsZone);
 
-    // Tableau de budget (droite)
+    // Tableau de budget (droite) avec bouton de validation au-dessus
+    const budgetSection = createElement('div', { className: 'budget-section' });
+
+    // Add validation button above table if all documents are processed
+    if (this.currentDocumentIndex >= this.documents.length) {
+      const validateBtnContainer = createElement('div', { className: 'validate-button-container' });
+      const validateAllBtn = createElement('button', {
+        className: 'btn btn-success btn-validate-budget',
+        onclick: () => this.validateFinal()
+      }, 'Valider le budget complet');
+      validateBtnContainer.appendChild(validateAllBtn);
+      budgetSection.appendChild(validateBtnContainer);
+    }
+
     const budgetTable = this.createBudgetTable();
-    layout.appendChild(budgetTable);
+    budgetSection.appendChild(budgetTable);
+    layout.appendChild(budgetSection);
 
     this.container.appendChild(layout);
 
@@ -271,23 +285,17 @@ export class BudgetBoard {
 
     const buttonsContainer = createElement('div', { className: 'document-nav-buttons' });
 
-    // Add validation button if all documents are processed
+    // Show "Skip to Part 3" button if validation has failed
+    if (this.currentDocumentIndex >= this.documents.length && this.validationFailed) {
+      const skipBtn = createElement('button', {
+        className: 'btn btn-warning',
+        onclick: () => this.skipToPart3()
+      }, 'Passer à la partie 3');
+      buttonsContainer.appendChild(skipBtn);
+    }
+
+    // Add print button if all documents are processed
     if (this.currentDocumentIndex >= this.documents.length) {
-      const validateAllBtn = createElement('button', {
-        className: 'btn btn-success',
-        onclick: () => this.validateFinal()
-      }, 'Valider le budget complet');
-      buttonsContainer.appendChild(validateAllBtn);
-
-      // Show "Skip to Part 3" button if validation has failed
-      if (this.validationFailed) {
-        const skipBtn = createElement('button', {
-          className: 'btn btn-warning',
-          onclick: () => this.skipToPart3()
-        }, 'Passer à la partie 3');
-        buttonsContainer.appendChild(skipBtn);
-      }
-
       const printBtn = createElement('button', {
         className: 'btn btn-secondary btn-small',
         onclick: () => window.print()
@@ -798,14 +806,17 @@ export class BudgetBoard {
 
       const validation = this.validationService.validateBudget(placedAmountsForValidation, this.budgetData);
 
-      const correctItems = Object.values(validation.items).filter(i => i.isValid).length;
-      const totalItems = Object.keys(validation.items).length;
+      // Count only expense items (13 items)
+      const expenseItems = [...this.budgetData.sorties_fixes, ...this.budgetData.sorties_variables];
+      const totalExpenseItems = expenseItems.length; // 13 items
 
-      this.score = this.scoringService.calculatePart2Score(
-        correctItems,
-        totalItems,
-        validation.totals.solde.isCorrect
-      );
+      // Count correct expense items only
+      const correctExpenseItems = expenseItems.filter(item =>
+        validation.items[item.libelle] && validation.items[item.libelle].isValid
+      ).length;
+
+      // Calculate score based on 13 expense items only
+      this.score = this.scoringService.calculatePart2Score(correctExpenseItems, totalExpenseItems);
 
       announce(`Passage à la partie 3. Score: ${this.score} sur 20`);
       alert(`Passage à la partie 3...\n\nScore obtenu: ${this.score}/20`);
@@ -815,21 +826,20 @@ export class BudgetBoard {
   }
 
   complete(validation) {
-    const correctItems = Object.values(validation.items).filter(i => i.isValid).length;
-    const totalItems = Object.keys(validation.items).length;
-
-    // Count only expense items for display
+    // Count only expense items (sorties_fixes + sorties_variables = 13 items)
     const expenseItems = [...this.budgetData.sorties_fixes, ...this.budgetData.sorties_variables];
     const totalExpenseItems = expenseItems.length; // 13 items
 
-    this.score = this.scoringService.calculatePart2Score(
-      correctItems,
-      totalItems,
-      validation.totals.solde.isCorrect
-    );
+    // Count correct expense items only
+    const correctExpenseItems = expenseItems.filter(item =>
+      validation.items[item.libelle] && validation.items[item.libelle].isValid
+    ).length;
+
+    // Calculate score based on 13 expense items only (no balance bonus)
+    this.score = this.scoringService.calculatePart2Score(correctExpenseItems, totalExpenseItems);
 
     announce(`Partie 2 terminée ! Score: ${this.score} sur 20`);
-    alert(`Félicitations ! Tu as complété le budget correctement (${totalExpenseItems}/${totalExpenseItems} postes de dépenses).\n\nScore: ${this.score}/20\n\nPassage à la partie 3...`);
+    alert(`Félicitations ! Tu as complété le budget correctement (${correctExpenseItems}/${totalExpenseItems} postes de dépenses).\n\nScore: ${this.score}/20\n\nPassage à la partie 3...`);
 
     this.emit('complete', this.score);
   }

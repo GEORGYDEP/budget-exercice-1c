@@ -284,12 +284,12 @@ export class DocQuiz {
       <div class="card text-center">
         <h3 class="card-title">Partie 1 terminée !</h3>
         <p class="text-lg mb-md">Tu as répondu correctement à <strong>${correctAnswers}/${this.questions.length}</strong> questions</p>
-        <p class="text-xl font-bold">Score: ${this.score}/10</p>
+        <p class="text-xl font-bold">Score: ${this.score}/20</p>
         <p class="text-secondary mt-md">Passage à la partie 2...</p>
       </div>
     `;
 
-    announce(`Partie 1 terminée. Score: ${this.score} sur 10`);
+    announce(`Partie 1 terminée. Score: ${this.score} sur 20`);
     this.emit('complete', this.score);
   }
 
