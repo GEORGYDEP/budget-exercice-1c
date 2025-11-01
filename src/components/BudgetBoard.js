@@ -121,6 +121,12 @@ export class BudgetBoard {
 
   createDocumentPreviewLarge(doc) {
     const preview = createElement('div', { className: 'document-preview-large' });
+
+    // Add special class for documents that need to be enlarged
+    if (doc.id === 'extrait-bancaire' || doc.id === 'visa') {
+      preview.classList.add('document-preview-enlarged');
+    }
+
     const img = createElement('img', {
       src: doc.imagePath,
       alt: doc.titre
@@ -135,8 +141,16 @@ export class BudgetBoard {
     const title = createElement('h3', {}, 'Montants à placer');
     zone.appendChild(title);
 
+    // Get current document to determine layout
+    const currentDoc = this.currentDocumentIndex < this.documents.length
+      ? this.documents[this.currentDocumentIndex]
+      : null;
+
+    // Use vertical layout for documents with multiple amounts
+    const useVerticalLayout = currentDoc && this.availableAmounts.length > 2;
+
     const amountsContainer = createElement('div', {
-      className: 'amounts-container',
+      className: useVerticalLayout ? 'amounts-container amounts-container-vertical' : 'amounts-container',
       id: 'amounts-container'
     });
 
@@ -208,8 +222,38 @@ export class BudgetBoard {
 
   createBudgetTable() {
     const container = createElement('div', { className: 'budget-table-container' });
+
+    // Create header with title and navigation button
+    const header = createElement('div', { className: 'budget-table-header' });
     const title = createElement('h3', {}, 'Budget du mois - Septembre');
-    container.appendChild(title);
+    header.appendChild(title);
+
+    // Add navigation buttons
+    if (this.currentDocumentIndex < this.documents.length || this.currentDocumentIndex > 0) {
+      const navButtons = createElement('div', { className: 'document-nav-buttons' });
+
+      // Previous document button
+      if (this.currentDocumentIndex > 0) {
+        const prevBtn = createElement('button', {
+          className: 'btn btn-secondary btn-small',
+          onclick: () => this.previousDocument()
+        }, '← Document précédent');
+        navButtons.appendChild(prevBtn);
+      }
+
+      // Next document button
+      if (this.currentDocumentIndex < this.documents.length) {
+        const nextBtn = createElement('button', {
+          className: 'btn btn-secondary btn-small',
+          onclick: () => this.skipDocument()
+        }, 'Document suivant →');
+        navButtons.appendChild(nextBtn);
+      }
+
+      header.appendChild(navButtons);
+    }
+
+    container.appendChild(header);
 
     const table = createElement('table', { className: 'budget-table' });
 
@@ -315,19 +359,12 @@ export class BudgetBoard {
 
     // Show different actions based on progress
     if (this.currentDocumentIndex < this.documents.length) {
-      // Auto-validation message instead of manual button
+      // Auto-validation message
       const autoValidateMsg = createElement('p', {
         className: 'text-secondary text-center',
         id: 'auto-validate-message'
       }, 'Place les montants dans le tableau. La validation se fera automatiquement.');
       actions.appendChild(autoValidateMsg);
-
-      // Skip document button (optional) - kept for user control
-      const skipBtn = createElement('button', {
-        className: 'btn btn-secondary',
-        onclick: () => this.skipDocument()
-      }, 'Passer ce document');
-      actions.appendChild(skipBtn);
     } else {
       // Final validation button
       const validateAllBtn = createElement('button', {
@@ -376,6 +413,22 @@ export class BudgetBoard {
 
     // If dropping on the same cell, do nothing
     if (fromPlaced && fromRubrique === item.libelle) {
+      return;
+    }
+
+    // Check if this rubrique already has an amount and warn the user
+    if (this.placedAmounts[item.libelle] && !fromPlaced) {
+      // Show warning message
+      announce(`⚠️ Ce poste "${item.libelle}" est déjà rempli. Glisse le montant existant ailleurs d'abord.`);
+
+      // Flash the drop zone to show it's already filled
+      dropZone.classList.add('error');
+      setTimeout(() => {
+        dropZone.classList.remove('error');
+        if (this.placedAmounts[item.libelle]) {
+          dropZone.classList.add('filled');
+        }
+      }, 1000);
       return;
     }
 
@@ -551,6 +604,15 @@ export class BudgetBoard {
     this.nextDocument();
   }
 
+  previousDocument() {
+    if (this.currentDocumentIndex > 0) {
+      this.currentDocumentIndex--;
+      announce('Retour au document précédent');
+      this.emitProgress();
+      this.render();
+    }
+  }
+
   nextDocument() {
     if (this.currentDocumentIndex < this.documents.length - 1) {
       this.currentDocumentIndex++;
@@ -569,8 +631,27 @@ export class BudgetBoard {
 
     if (!validation.isComplete) {
       announce('Budget incomplet. Complète toutes les rubriques.');
-      alert('Veuillez compléter toutes les rubriques avant de valider.');
-      return;
+
+      // Count missing items
+      const totalItems = [...this.budgetData.entrees, ...this.budgetData.sorties_fixes, ...this.budgetData.sorties_variables].length;
+      const placedItems = Object.keys(this.placedAmounts).length;
+      const missingItems = totalItems - placedItems;
+
+      // Check if there are still documents to process
+      const hasMoreDocuments = this.currentDocumentIndex < this.documents.length;
+
+      let message = `Budget incomplet !\n\nTu as rempli ${placedItems} postes sur ${totalItems}.\nIl manque encore ${missingItems} montant(s).`;
+
+      if (hasMoreDocuments) {
+        message += '\n\nTu peux revenir en arrière pour consulter les documents précédents en cliquant sur OK.';
+        alert(message);
+        // Allow user to go back
+        return;
+      } else {
+        message += '\n\nVérifie bien tous les documents pour trouver les montants manquants.';
+        alert(message);
+        return;
+      }
     }
 
     // Afficher les erreurs
