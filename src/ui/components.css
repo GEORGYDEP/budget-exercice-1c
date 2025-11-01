@@ -256,6 +256,24 @@
 }
 
 /* Budget table */
+.budget-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+  gap: var(--space-md);
+}
+
+.budget-table-header h3 {
+  margin: 0;
+}
+
+.document-nav-buttons {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
 .budget-table {
   width: 100%;
   border-collapse: collapse;

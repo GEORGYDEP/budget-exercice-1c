@@ -213,6 +213,26 @@
   transform: none;
 }
 
+/* Enlarged documents for better readability */
+.document-preview-enlarged {
+  transform: scale(1.35);
+  transform-origin: top center;
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-xl);
+}
+
+@media (min-width: 768px) {
+  .document-preview-enlarged {
+    transform: scale(1.35);
+  }
+}
+
+@media (max-width: 767px) {
+  .document-preview-enlarged {
+    transform: scale(1.15);
+  }
+}
+
 .documents-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -247,6 +267,14 @@
   background: var(--color-surface);
   border-radius: var(--radius-md);
   border: 2px dashed var(--color-border);
+}
+
+/* Vertical layout for documents with multiple amounts */
+.amounts-container-vertical {
+  flex-direction: column;
+  align-items: center;
+  max-width: 200px;
+  margin: 0 auto;
 }
 
 /* Budget table (right side) */

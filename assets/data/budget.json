@@ -10,7 +10,7 @@
       "type": "allocation",
       "libelle": "Chômage de Julie",
       "montantAttendu": 352.52,
-      "sourceDocId": "extrait-bancaire"
+      "sourceDocId": "chomage"
     }
   ],
   "sorties_fixes": [

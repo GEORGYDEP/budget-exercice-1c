@@ -92,18 +92,29 @@
     ]
   },
   {
+    "id": "chomage",
+    "titre": "Virement allocations chômage",
+    "type": "virement",
+    "pagePDF": 11,
+    "imagePath": "assets/images/page_11.png",
+    "montants": [
+      352.52
+    ],
+    "libelles": [
+      "Allocations de chômage ONEM"
+    ]
+  },
+  {
     "id": "extrait-bancaire",
     "titre": "Extrait bancaire",
     "type": "extrait_compte",
     "pagePDF": 7,
     "imagePath": "assets/images/page_7.png",
     "montants": [
-      352.52,
       2.3,
       61.76
     ],
     "libelles": [
-      "Virement salaire",
       "Frais de gestion",
       "Luminus électricité"
     ]
