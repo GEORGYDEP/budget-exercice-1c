@@ -31,7 +31,7 @@ export class EmailGate {
 
     // Introduction text
     const introText = createElement('p', { className: 'email-gate-intro text-center' },
-      'Ce jeu a été conçu pour les élèves de l\'Institut Saint-Luc de Frameries par M. DEPRET.');
+      'Ce jeu a été conçu pour les élèves de l'Institut Saint-Luc de Frameries par M. DEPRET.');
     card.appendChild(introText);
 
     // Form
