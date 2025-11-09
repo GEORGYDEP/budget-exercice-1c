@@ -141,16 +141,16 @@ export class ResultsSheet {
     part3Row.appendChild(createElement('td', { className: 'results-part-number' }, 'Partie 3'));
     part3Row.appendChild(createElement('td', {}, 'Revenus (placement des recettes)'));
     part3Row.appendChild(createElement('td', { className: 'results-score-cell' },
-      `${this.scores.part3} / 20`));
+      `${this.scores.part3} / 5`));
     tbody.appendChild(part3Row);
 
     // Part 4
-    const part4Row = createElement('tr');
-    part4Row.appendChild(createElement('td', { className: 'results-part-number' }, 'Partie 4'));
-    part4Row.appendChild(createElement('td', {}, 'Quiz final (questions de synthèse)'));
-    part4Row.appendChild(createElement('td', { className: 'results-score-cell' },
-      `${this.scores.part4} / 20`));
-    tbody.appendChild(part4Row);
+    const part5Row = createElement('tr');
+    part5Row.appendChild(createElement('td', { className: 'results-part-number' }, 'Partie 5'));
+    part5Row.appendChild(createElement('td', {}, 'Questions de synthèse'));
+    part5Row.appendChild(createElement('td', { className: 'results-score-cell' },
+      `${this.scores.part5} / 20`));
+    tbody.appendChild(part5Row);
 
     table.appendChild(tbody);
     section.appendChild(table);

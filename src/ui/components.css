@@ -362,6 +362,55 @@
   background: var(--color-error-light);
 }
 
+.drop-zone.error.misplaced {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.15);
+  border-width: 3px;
+  animation: pulse-red 2s ease-in-out infinite;
+}
+
+.drop-zone.error.misplaced .draggable-amount {
+  background: #dc2626;
+  color: white;
+  position: relative;
+}
+
+.drop-zone.error.misplaced .draggable-amount::after {
+  content: "⚠";
+  margin-left: 8px;
+  font-size: 1.2em;
+}
+
+@keyframes pulse-red {
+  0%, 100% {
+    border-color: #dc2626;
+    background: rgba(220, 38, 38, 0.15);
+  }
+  50% {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.25);
+  }
+}
+
+/* Legend for misplaced amounts */
+.misplaced-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  margin-top: var(--space-md);
+  background: rgba(220, 38, 38, 0.1);
+  border: 2px solid #dc2626;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: #991b1b;
+}
+
+.misplaced-icon {
+  font-size: 1.2em;
+}
+
 /* Draggable amount */
 .draggable-amount {
   padding: var(--space-md) var(--space-lg);

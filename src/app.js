@@ -1,13 +1,14 @@
 /**
  * Classe principale de l'application
  * Gère la navigation entre les parties et l'état global du jeu
- * Nouvelle version avec 4 parties + EmailGate
+ * Version avec 5 parties + EmailGate
  */
 import { EmailGate } from './components/EmailGate.js';
 import { DocQuiz } from './components/DocQuiz.js';
 import { BudgetBoard } from './components/BudgetBoard.js';
 import { RevenueBoard } from './components/RevenueBoard.js';
 import { FinalSynthesis } from './components/FinalSynthesis.js';
+import { SynthesisQuiz } from './components/SynthesisQuiz.js';
 import { ResultsSheet } from './components/ResultsSheet.js';
 import { ScoringService } from './services/scoring.js';
 import { StorageService } from './services/storage.js';
@@ -15,12 +16,13 @@ import { announce } from './utils/dom.js';
 
 export class App {
   constructor() {
-    this.currentPart = 0; // 0 = email gate, 1-4 = game parts
+    this.currentPart = 0; // 0 = email gate, 1-5 = game parts
     this.scores = {
       part1: 0,
       part2: 0,
       part3: 0,
       part4: 0,
+      part5: 0,
       total: 0
     };
     this.userData = null;
@@ -33,6 +35,7 @@ export class App {
     this.budgetBoard = null;
     this.revenueBoard = null;
     this.finalSynthesis = null;
+    this.synthesisQuiz = null;
   }
 
   async init() {
@@ -77,7 +80,7 @@ export class App {
     // Ask user if they want to restore their session
     const daysSinceLastSave = (Date.now() - savedState.timestamp) / (1000 * 60 * 60 * 24);
 
-    if (daysSinceLastSave < 7 && savedState.currentPart > 0 && savedState.currentPart < 5) {
+    if (daysSinceLastSave < 7 && savedState.currentPart > 0 && savedState.currentPart < 6) {
       return confirm('Voulez-vous reprendre votre session précédente ?');
     }
     return false;
@@ -133,11 +136,21 @@ export class App {
       setTimeout(() => this.nextPart(), 1000);
     });
 
-    // Partie 4: Final Synthesis (Tableau + Questions)
+    // Partie 4: Final Synthesis (Tableau uniquement)
     this.finalSynthesis = new FinalSynthesis(document.getElementById('final-synthesis-container'));
     await this.finalSynthesis.init();
-    this.finalSynthesis.on('complete', (score) => {
-      this.scores.part4 = score;
+    this.finalSynthesis.on('navigate-to-part5', () => {
+      this.showPart(5);
+    });
+
+    // Partie 5: Synthesis Quiz (Questions uniquement)
+    this.synthesisQuiz = new SynthesisQuiz(document.getElementById('synthesis-quiz-container'));
+    await this.synthesisQuiz.init(this.userData ? this.userData.email : null);
+    this.synthesisQuiz.on('navigate-to-part4', () => {
+      this.showPart(4);
+    });
+    this.synthesisQuiz.on('complete', (score) => {
+      this.scores.part5 = score;
       this.updateProgress();
       this.saveState();
       setTimeout(() => this.showResults(), 1000);
@@ -156,7 +169,7 @@ export class App {
 
     // Sauvegarder l'état avant de quitter
     window.addEventListener('beforeunload', () => {
-      if (this.currentPart > 0 && this.currentPart < 5) {
+      if (this.currentPart > 0 && this.currentPart < 6) {
         this.saveState();
       }
     });
@@ -247,7 +260,8 @@ export class App {
         1: 'Partie 1 : Identifier les documents',
         2: 'Partie 2 : Compléter le budget (dépenses)',
         3: 'Partie 3 : Compléter le budget (revenus)',
-        4: 'Partie 4 : Tableau et questions de synthèse'
+        4: 'Partie 4 : Tableau corrigé de septembre',
+        5: 'Partie 5 : Questions de synthèse'
       };
       announce(partNames[partNumber] || 'Nouvelle partie');
 
@@ -257,18 +271,18 @@ export class App {
   }
 
   nextPart() {
-    if (this.currentPart < 4) {
+    if (this.currentPart < 5) {
       this.showPart(this.currentPart + 1);
     }
   }
 
   showResults() {
-    // Calculate total score
+    // Calculate total score (Part 4 doesn't have a score, Part 5 replaces old Part 4)
     this.scores.total = this.scoringService.calculateTotalScore(
       this.scores.part1,
       this.scores.part2,
       this.scores.part3,
-      this.scores.part4
+      this.scores.part5  // Part 5 is the quiz (replaces old part4)
     );
 
     // Hide all parts
@@ -297,8 +311,8 @@ export class App {
       announce(`Résultats finaux : Score total ${this.scores.total} sur 65`);
     }
 
-    // Mark as completed (part 5)
-    this.currentPart = 5;
+    // Mark as completed (part 6 = results shown)
+    this.currentPart = 6;
 
     // Save final state
     this.saveState();
@@ -317,9 +331,10 @@ export class App {
     let progress = 0;
     if (this.currentPart === 0) progress = 0;
     else if (this.currentPart === 1) progress = 0;
-    else if (this.currentPart === 2) progress = 25;
-    else if (this.currentPart === 3) progress = 50;
-    else if (this.currentPart === 4) progress = 75;
+    else if (this.currentPart === 2) progress = 20;
+    else if (this.currentPart === 3) progress = 40;
+    else if (this.currentPart === 4) progress = 60;
+    else if (this.currentPart === 5) progress = 80;
     else progress = 100;
 
     // Update progress bar
@@ -330,8 +345,8 @@ export class App {
 
     // Update current part text
     const currentPartText = document.querySelector('.current-part');
-    if (currentPartText && this.currentPart >= 1 && this.currentPart <= 4) {
-      currentPartText.textContent = `Partie ${this.currentPart}/4`;
+    if (currentPartText && this.currentPart >= 1 && this.currentPart <= 5) {
+      currentPartText.textContent = `Partie ${this.currentPart}/5`;
     }
 
     // Update score display based on current part
@@ -356,17 +371,18 @@ export class App {
     }
     if (this.currentPart >= 3) {
       currentScore += this.scores.part3;
-      maxScore += 20;
+      maxScore += 5;
     }
-    if (this.currentPart >= 4) {
-      currentScore += this.scores.part4;
+    // Part 4 has no score (just displays table)
+    if (this.currentPart >= 5) {
+      currentScore += this.scores.part5;
       maxScore += 20;
     }
 
-    if (this.currentPart === 5) {
+    if (this.currentPart === 6) {
       // Final results
       currentScore = this.scores.total;
-      maxScore = 80;
+      maxScore = 65;
     }
 
     // Format score with 1 decimal place
@@ -415,6 +431,7 @@ export class App {
       part2: 0,
       part3: 0,
       part4: 0,
+      part5: 0,
       total: 0
     };
 
@@ -430,6 +447,7 @@ export class App {
     if (this.budgetBoard) this.budgetBoard.reset();
     if (this.revenueBoard) this.revenueBoard.reset();
     if (this.finalSynthesis) this.finalSynthesis.reset();
+    if (this.synthesisQuiz) this.synthesisQuiz.reset();
 
     // Hide restart button
     const restartBtn = document.getElementById('restart-btn');
