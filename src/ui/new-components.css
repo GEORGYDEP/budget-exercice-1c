@@ -18,7 +18,16 @@
 
 .email-gate-subtitle {
   font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+
+.email-gate-intro {
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
   margin-bottom: 2rem;
+  line-height: 1.6;
+  font-style: normal;
+  text-align: center;
 }
 
 .email-gate-form {
