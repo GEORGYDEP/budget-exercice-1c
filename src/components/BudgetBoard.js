@@ -294,6 +294,15 @@ export class BudgetBoard {
       buttonsContainer.appendChild(skipBtn);
     }
 
+    // Add print button if all documents are processed
+    if (this.currentDocumentIndex >= this.documents.length) {
+      const printBtn = createElement('button', {
+        className: 'btn btn-secondary btn-small',
+        onclick: () => window.print()
+      }, '🖨 Imprimer');
+      buttonsContainer.appendChild(printBtn);
+    }
+
     // Add navigation buttons
     if (this.currentDocumentIndex < this.documents.length || this.currentDocumentIndex > 0) {
       // Previous document button
@@ -771,21 +780,9 @@ export class BudgetBoard {
       return;
     }
 
-    // Cas C : Tout est correct - mark all items as correct (green)
+    // Cas C : Tout est correct
     if (validation.isCorrect) {
       this.validationFailed = false;
-
-      // Mark all items visually as correct
-      Object.entries(validation.items).forEach(([rubrique, result]) => {
-        const dropZone = document.querySelector(`[data-rubrique="${rubrique}"]`);
-        if (dropZone) {
-          dropZone.classList.remove('error', 'misplaced');
-          if (result.isValid) {
-            dropZone.classList.add('filled');
-          }
-        }
-      });
-
       this.complete(validation);
     }
   }

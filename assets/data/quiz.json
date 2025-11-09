@@ -161,12 +161,12 @@
       "question": "Quelle proportion représente l'épargne par rapport aux ressources ?",
       "options": [
         "Environ 1/3 des ressources",
-        "Environ 1/5 des ressources",
+        "Environ 1/5 des ressources (17%)",
         "La moitié des ressources",
         "Environ 1/10 des ressources"
       ],
       "correctIndex": 1,
-      "explication": "L'épargne représente environ 1/5 des ressources (352,52€ / 2102,52€)"
+      "explication": "L'épargne représente environ 1/5 des ressources, soit 17% (352,52€ / 2102,52€)"
     },
     {
       "id": "f4",
