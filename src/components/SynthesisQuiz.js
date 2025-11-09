@@ -1,6 +1,6 @@
 /**
  * Composant SynthesisQuiz - Partie 5
- * Affiche uniquement les questions de synthèse avec persistance des réponses
+ * Affiche uniquement les questions de synthÃ¨se avec persistance des rÃ©ponses
  */
 import { createElement, formatEuro, announce, wait, shuffle } from '../utils/dom.js';
 import { ScoringService } from '../services/scoring.js';
@@ -47,7 +47,7 @@ export class SynthesisQuiz {
         }
       }
     } catch (error) {
-      console.error('Erreur chargement réponses:', error);
+      console.error('Erreur chargement rÃ©ponses:', error);
       this.answers = {};
     }
   }
@@ -61,7 +61,7 @@ export class SynthesisQuiz {
       };
       localStorage.setItem(this.storageKey, JSON.stringify(data));
     } catch (error) {
-      console.error('Erreur sauvegarde réponses:', error);
+      console.error('Erreur sauvegarde rÃ©ponses:', error);
     }
   }
 
@@ -72,13 +72,13 @@ export class SynthesisQuiz {
 
     // Header with navigation button
     const header = createElement('div', { className: 'synthesis-quiz-header' });
-    const title = createElement('h2', {}, 'Questions de synthèse  septembre');
+    const title = createElement('h2', {}, 'Questions de synthÃ¨se de septembre');
     header.appendChild(title);
 
     const viewTableBtn = createElement('button', {
       className: 'btn btn-secondary',
       onclick: () => this.emit('navigate-to-part4')
-    }, ' Voir le tableau (Partie 4)');
+    }, 'â† Voir le tableau (Partie 4)');
     header.appendChild(viewTableBtn);
 
     layout.appendChild(header);
@@ -98,7 +98,7 @@ export class SynthesisQuiz {
     const validateBtn = createElement('button', {
       className: 'btn btn-success btn-large',
       onclick: () => this.validateAnswers()
-    }, 'Valider mes réponses');
+    }, 'Valider mes rÃ©ponses');
     footer.appendChild(validateBtn);
 
     layout.appendChild(footer);
@@ -146,8 +146,7 @@ export class SynthesisQuiz {
         className: `quiz-option ${isSelected ? 'selected' : ''} ${
           showFeedback ? (isCorrect ? 'correct' : isSelected ? 'incorrect' : '') : ''
         }`,
-        onclick: () => this.selectOption(item.originalIndex, question),
-        disabled: isAnswered
+        onclick: () => this.selectOption(item.originalIndex, question)
       }, item.option);
       optionsContainer.appendChild(optionElement);
     });
@@ -181,7 +180,7 @@ export class SynthesisQuiz {
     // Re-render to show feedback
     this.render();
 
-    announce(isCorrect ? 'Bonne réponse' : 'Mauvaise réponse');
+    announce(isCorrect ? 'Bonne rÃ©ponse' : 'Mauvaise rÃ©ponse');
 
     // Scroll to next question
     setTimeout(() => {
@@ -198,7 +197,7 @@ export class SynthesisQuiz {
 
     if (answeredCount < this.questions.length) {
       const missingCount = this.questions.length - answeredCount;
-      alert(`Tu dois répondre à toutes les questions avant de valider.\n\nIl reste ${missingCount} question(s) sans réponse.`);
+      alert(`Tu dois rÃ©pondre Ã  toutes les questions avant de valider.\n\nIl reste ${missingCount} question(s) sans rÃ©ponse.`);
 
       // Scroll to first unanswered question
       for (const question of this.questions) {
@@ -219,14 +218,14 @@ export class SynthesisQuiz {
     const correctAnswers = Object.values(this.answers).filter(a => a.isCorrect).length;
     const score = this.scoringService.calculatePart4Score(correctAnswers, this.questions.length);
 
-    announce(`Partie 5 terminée. Score: ${score} sur 20`);
+    announce(`Partie 5 terminÃ©e. Score: ${score} sur 20`);
 
     // Show completion message
     const confirmed = confirm(
-      `Félicitations ! Tu as répondu à toutes les questions.\n\n` +
-      `Réponses correctes: ${correctAnswers}/${this.questions.length}\n` +
+      `FÃ©licitations ! Tu as rÃ©pondu Ã  toutes les questions.\n\n` +
+      `RÃ©ponses correctes: ${correctAnswers}/${this.questions.length}\n` +
       `Score: ${score}/20\n\n` +
-      `Cliquer sur OK pour voir les résultats finaux.`
+      `Cliquer sur OK pour voir les rÃ©sultats finaux.`
     );
 
     if (confirmed) {
