@@ -54,7 +54,7 @@ export class ResultsSheet {
       'Résultats du jeu Budget-Ménage'));
 
     header.appendChild(createElement('p', { className: 'results-subtitle' },
-      'Institut Saint-Luc de Frameries — ISTLM'));
+      'Institut Saint-Louis Marie - ISTLM'));
 
     return header;
   }
