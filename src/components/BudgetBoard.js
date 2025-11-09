@@ -294,14 +294,7 @@ export class BudgetBoard {
       buttonsContainer.appendChild(skipBtn);
     }
 
-    // Add print button if all documents are processed
-    if (this.currentDocumentIndex >= this.documents.length) {
-      const printBtn = createElement('button', {
-        className: 'btn btn-secondary btn-small',
-        onclick: () => window.print()
-      }, '🖨 Imprimer');
-      buttonsContainer.appendChild(printBtn);
-    }
+    // Print button removed - no longer needed after validation
 
     // Add navigation buttons
     if (this.currentDocumentIndex < this.documents.length || this.currentDocumentIndex > 0) {
