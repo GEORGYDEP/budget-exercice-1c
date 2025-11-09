@@ -29,6 +29,11 @@ export class EmailGate {
       'Avant de commencer, identifie-toi avec ton adresse email ISTLM');
     card.appendChild(subtitle);
 
+    // Introduction text
+    const introText = createElement('p', { className: 'email-gate-intro text-center' },
+      'Ce jeu a été conçu pour les élèves de l'Institut Saint-Luc de Frameries par M. DEPRET.');
+    card.appendChild(introText);
+
     // Form
     const form = createElement('form', {
       className: 'email-gate-form',
