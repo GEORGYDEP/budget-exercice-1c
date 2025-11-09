@@ -1,8 +1,9 @@
 /**
  * Classe principale de l'application
  * Gère la navigation entre les parties et l'état global du jeu
- * Version avec 5 parties + EmailGate
+ * Version avec 5 parties + EmailGate + IntroScreen
  */
+import { IntroScreen } from './components/IntroScreen.js';
 import { EmailGate } from './components/EmailGate.js';
 import { DocQuiz } from './components/DocQuiz.js';
 import { BudgetBoard } from './components/BudgetBoard.js';
@@ -30,6 +31,7 @@ export class App {
     this.scoringService = new ScoringService();
     this.storageService = new StorageService();
 
+    this.introScreen = null;
     this.emailGate = null;
     this.docQuiz = null;
     this.budgetBoard = null;
@@ -66,7 +68,7 @@ export class App {
         this.updateUserDisplay();
         this.showPart(this.currentPart || 1);
       } else {
-        this.showEmailGate();
+        this.showIntroScreen();
       }
 
       announce('Application chargée');
@@ -93,6 +95,13 @@ export class App {
   }
 
   async initializeComponents() {
+    // Intro Screen
+    this.introScreen = new IntroScreen();
+    this.introScreen.on('complete', () => {
+      this.hideIntroScreen();
+      this.showEmailGate();
+    });
+
     // Email Gate
     this.emailGate = new EmailGate(document.getElementById('email-gate-container'));
     this.emailGate.on('complete', (userData) => {
@@ -220,6 +229,53 @@ export class App {
     const userNameDisplay = document.getElementById('user-name-display');
     if (userNameDisplay) {
       userNameDisplay.style.display = 'block';
+    }
+  }
+
+  showIntroScreen() {
+    // Hide all game parts
+    document.querySelectorAll('.game-part').forEach(part => {
+      part.classList.remove('active');
+    });
+
+    // Hide email gate
+    const emailGateSection = document.getElementById('email-gate');
+    if (emailGateSection) {
+      emailGateSection.classList.remove('active');
+    }
+
+    // Hide results
+    document.getElementById('results').classList.remove('active');
+
+    // Show intro screen
+    if (this.introScreen) {
+      const appMain = document.querySelector('.app-main');
+      if (appMain) {
+        this.introScreen.init();
+        const introContainer = this.introScreen.container;
+        if (introContainer) {
+          // Insert intro screen at the beginning of app-main
+          appMain.insertBefore(introContainer, appMain.firstChild);
+        }
+      }
+    }
+
+    // Hide progress indicator
+    const progressIndicator = document.querySelector('.progress-indicator');
+    if (progressIndicator) {
+      progressIndicator.style.display = 'none';
+    }
+
+    // Hide user name display
+    const userNameDisplay = document.getElementById('user-name-display');
+    if (userNameDisplay) {
+      userNameDisplay.style.display = 'none';
+    }
+  }
+
+  hideIntroScreen() {
+    if (this.introScreen) {
+      this.introScreen.hide();
     }
   }
 
@@ -458,8 +514,8 @@ export class App {
     // Clear storage
     this.storageService.clearState();
 
-    // Show email gate again
-    this.showEmailGate();
+    // Show intro screen again
+    this.showIntroScreen();
 
     announce('Nouvelle session commencée');
   }
