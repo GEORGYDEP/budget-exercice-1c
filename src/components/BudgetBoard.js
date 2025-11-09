@@ -722,57 +722,94 @@ export class BudgetBoard {
       this.placedAmounts[item.libelle] && this.placedAmounts[item.libelle].length > 0
     ).length;
 
-    if (!validation.isComplete) {
-      this.validationFailed = true;
-      announce('Budget incomplet. Complète toutes les rubriques de dépenses.');
+    // Count missing and misplaced expense items
+    const missingItems = totalExpenseItems - placedExpenseItems;
+    const misplacedExpenseItems = expenseItems.filter(item =>
+      validation.items[item.libelle] &&
+      !validation.items[item.libelle].isValid &&
+      validation.items[item.libelle].error === 'wrong_amount'
+    ).length;
 
-      const missingItems = totalExpenseItems - placedExpenseItems;
+    // Cas A : Budget incomplet (des montants manquent)
+    if (!validation.isComplete || missingItems > 0) {
+      this.validationFailed = true;
+      announce(`Budget incomplet. Tu as rempli ${placedExpenseItems} postes de dépenses sur ${totalExpenseItems}.`);
 
       // Check if there are still documents to process
       const hasMoreDocuments = this.currentDocumentIndex < this.documents.length;
 
-      let message = `Budget incomplet !\n\nTu as rempli ${placedExpenseItems} postes de dépenses sur ${totalExpenseItems}.\nIl manque encore ${missingItems} montant(s).`;
+      let message = `Tu as rempli ${placedExpenseItems} postes de dépenses sur ${totalExpenseItems}.\nIl manque encore ${missingItems} montant(s).`;
 
       if (hasMoreDocuments) {
         message += '\n\nTu peux revenir en arrière pour consulter les documents précédents en cliquant sur OK.';
-        alert(message);
-        // Allow user to go back
-        this.render(); // Re-render to show skip button
-        return;
       } else {
         message += '\n\nVérifie bien tous les documents pour trouver les montants manquants.';
-        alert(message);
-        this.render(); // Re-render to show skip button
-        return;
       }
+
+      alert(message);
+      this.render(); // Re-render to show skip button
+      return;
     }
 
-    // Afficher les erreurs
+    // Marquer visuellement les erreurs
     Object.entries(validation.items).forEach(([rubrique, result]) => {
       const dropZone = document.querySelector(`[data-rubrique="${rubrique}"]`);
       if (dropZone) {
-        dropZone.classList.remove('error', 'filled');
+        dropZone.classList.remove('error', 'filled', 'misplaced');
         if (result.isValid) {
           dropZone.classList.add('filled');
-        } else {
-          dropZone.classList.add('error');
+        } else if (result.error === 'wrong_amount') {
+          dropZone.classList.add('error', 'misplaced');
         }
       }
     });
 
+    // Cas B : Tous les postes remplis mais certains montants sont mal placés
+    if (validation.isComplete && !validation.isCorrect && misplacedExpenseItems > 0) {
+      this.validationFailed = true;
+
+      const misplacedText = misplacedExpenseItems === 1
+        ? '1 montant n\'est'
+        : `${misplacedExpenseItems} montants ne sont`;
+
+      announce(`Tous les postes sont remplis, mais ${misplacedText} pas au bon endroit.`);
+      alert(`Tous les ${totalExpenseItems} postes sont remplis, mais ${misplacedText} pas au bon endroit.\n\nLes éléments concernés sont indiqués en rouge.\n\nTu peux déplacer les montants pour les corriger.`);
+
+      // Display legend below the budget table
+      this.displayMisplacedLegend();
+      return;
+    }
+
+    // Cas C : Tout est correct
     if (validation.isCorrect) {
       this.validationFailed = false;
       this.complete(validation);
-    } else {
-      this.validationFailed = true;
-      // Count errors in expense items only for better messaging
-      const expenseErrors = validation.errors.filter(err =>
-        err.type === 'sortie_fixe' || err.type === 'sortie_variable'
-      );
+    }
+  }
 
-      announce(`Certains postes comportent des erreurs. Vérifie les montants en rouge.`);
-      alert(`Certains postes comportent des erreurs.\n\nVérifie les montants en rouge avant de valider à nouveau.\n\nTu peux déplacer les montants pour les corriger.`);
-      this.render(); // Re-render to show skip button
+  displayMisplacedLegend() {
+    // Remove existing legend if any
+    const existingLegend = document.querySelector('.misplaced-legend');
+    if (existingLegend) {
+      existingLegend.remove();
+    }
+
+    // Add legend below budget table
+    const budgetSection = document.querySelector('.budget-section');
+    if (budgetSection) {
+      const legend = createElement('div', {
+        className: 'misplaced-legend'
+      });
+
+      const icon = createElement('span', {
+        className: 'misplaced-icon'
+      }, '🔴');
+
+      const text = createElement('span', {}, ' En rouge : montants mal placés.');
+
+      legend.appendChild(icon);
+      legend.appendChild(text);
+      budgetSection.appendChild(legend);
     }
   }
 

@@ -28,7 +28,7 @@
     },
     {
       "type": "fixe",
-      "libelle": "Proximus",
+      "libelle": "Téléphonie",
       "montantAttendu": 69.18,
       "sourceDocId": "proximus"
     },
@@ -40,7 +40,7 @@
     },
     {
       "type": "fixe",
-      "libelle": "Luminus",
+      "libelle": "Électricité et gaz",
       "montantAttendu": 61.76,
       "sourceDocId": "extrait-bancaire"
     }
@@ -60,7 +60,7 @@
     },
     {
       "type": "variable",
-      "libelle": "Carte de train",
+      "libelle": "Carte de bus",
       "montantAttendu": 48.5,
       "sourceDocId": "bus"
     },
