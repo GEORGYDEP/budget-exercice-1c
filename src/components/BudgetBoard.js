@@ -706,6 +706,34 @@ export class BudgetBoard {
 
     const validation = this.validationService.validateBudget(placedAmountsForValidation, this.budgetData);
 
+    // Apply color signaling immediately (green for correct, red for incorrect/missing)
+    // This matches the behavior in Part 3 (RevenueBoard)
+    const allBudgetItems = [
+      ...this.budgetData.entrees,
+      ...this.budgetData.sorties_fixes,
+      ...this.budgetData.sorties_variables
+    ];
+
+    allBudgetItems.forEach((item) => {
+      const dropZone = document.querySelector(`[data-rubrique="${item.libelle}"]`);
+      if (dropZone) {
+        dropZone.classList.remove('error', 'filled', 'misplaced');
+
+        const validationResult = validation.items[item.libelle];
+        if (validationResult && validationResult.isValid) {
+          // Correct amount: GREEN
+          dropZone.classList.add('filled');
+        } else {
+          // Incorrect or missing amount: RED
+          dropZone.classList.add('error');
+          // Add misplaced class for wrong amounts (not just missing)
+          if (validationResult && validationResult.error === 'wrong_amount') {
+            dropZone.classList.add('misplaced');
+          }
+        }
+      }
+    });
+
     // Count only EXPENSE items (sorties_fixes + sorties_variables), not revenues
     const expenseItems = [...this.budgetData.sorties_fixes, ...this.budgetData.sorties_variables];
     const totalExpenseItems = expenseItems.length; // Should be 13
@@ -743,19 +771,6 @@ export class BudgetBoard {
       this.render(); // Re-render to show skip button
       return;
     }
-
-    // Marquer visuellement les erreurs
-    Object.entries(validation.items).forEach(([rubrique, result]) => {
-      const dropZone = document.querySelector(`[data-rubrique="${rubrique}"]`);
-      if (dropZone) {
-        dropZone.classList.remove('error', 'filled', 'misplaced');
-        if (result.isValid) {
-          dropZone.classList.add('filled');
-        } else if (result.error === 'wrong_amount') {
-          dropZone.classList.add('error', 'misplaced');
-        }
-      }
-    });
 
     // Cas B : Tous les postes remplis mais certains montants sont mal placés
     if (validation.isComplete && !validation.isCorrect && misplacedExpenseItems > 0) {
