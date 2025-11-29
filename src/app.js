@@ -142,7 +142,8 @@ export class App {
       this.scores.part3 = score;
       this.updateProgress();
       this.saveState();
-      setTimeout(() => this.nextPart(), 1000);
+      // Skip Part 4 (table) and go directly to Part 5 (questions)
+      setTimeout(() => this.showPart(5), 1000);
     });
 
     // Partie 4: Final Synthesis (Tableau uniquement)
@@ -316,8 +317,8 @@ export class App {
         1: 'Partie 1 : Identifier les documents',
         2: 'Partie 2 : Compléter le budget (dépenses)',
         3: 'Partie 3 : Compléter le budget (revenus)',
-        4: 'Partie 4 : Tableau corrigé de septembre',
-        5: 'Partie 5 : Questions de synthèse'
+        4: 'Partie 4 : Tableau corrigé de septembre (non utilisé)',
+        5: 'Partie 4 : Questions de synthèse'
       };
       announce(partNames[partNumber] || 'Nouvelle partie');
 
@@ -389,7 +390,7 @@ export class App {
     else if (this.currentPart === 1) progress = 0;
     else if (this.currentPart === 2) progress = 20;
     else if (this.currentPart === 3) progress = 40;
-    else if (this.currentPart === 4) progress = 60;
+    else if (this.currentPart === 4) progress = 60; // Part 4 not used, skip to Part 5
     else if (this.currentPart === 5) progress = 80;
     else progress = 100;
 
@@ -402,7 +403,10 @@ export class App {
     // Update current part text
     const currentPartText = document.querySelector('.current-part');
     if (currentPartText && this.currentPart >= 1 && this.currentPart <= 5) {
-      currentPartText.textContent = `Partie ${this.currentPart}/5`;
+      // Display Part 5 as Part 4 since we're skipping the table
+      const displayPart = this.currentPart === 5 ? 4 : this.currentPart;
+      const totalParts = 4;
+      currentPartText.textContent = `Partie ${displayPart}/${totalParts}`;
     }
 
     // Update score display based on current part
