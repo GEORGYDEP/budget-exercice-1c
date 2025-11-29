@@ -773,7 +773,7 @@ export class BudgetBoard {
     }
 
     // Cas B : Tous les postes remplis mais certains montants sont mal placés
-    if (validation.isComplete && !validation.isCorrect && misplacedExpenseItems > 0) {
+    if (placedExpenseItems === totalExpenseItems && misplacedExpenseItems > 0) {
       this.validationFailed = true;
 
       const misplacedText = misplacedExpenseItems === 1
@@ -788,8 +788,13 @@ export class BudgetBoard {
       return;
     }
 
-    // Cas C : Tout est correct
-    if (validation.isCorrect) {
+    // Cas C : Toutes les DÉPENSES sont correctes (on ne vérifie pas les revenus qui sont dans la Partie 3)
+    // Vérifier uniquement que tous les postes de dépenses sont correctement remplis
+    const allExpensesCorrect = expenseItems.every(item =>
+      validation.items[item.libelle] && validation.items[item.libelle].isValid
+    );
+
+    if (allExpensesCorrect && placedExpenseItems === totalExpenseItems) {
       this.validationFailed = false;
       this.complete(validation);
     }
