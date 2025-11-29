@@ -70,16 +70,10 @@ export class SynthesisQuiz {
 
     const layout = createElement('div', { className: 'synthesis-quiz-layout' });
 
-    // Header with navigation button
+    // Header
     const header = createElement('div', { className: 'synthesis-quiz-header' });
     const title = createElement('h2', {}, 'Questions de synthèse de septembre');
     header.appendChild(title);
-
-    const viewTableBtn = createElement('button', {
-      className: 'btn btn-secondary',
-      onclick: () => this.emit('navigate-to-part4')
-    }, '← Voir le tableau (Partie 4)');
-    header.appendChild(viewTableBtn);
 
     layout.appendChild(header);
 
